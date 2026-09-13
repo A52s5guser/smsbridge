@@ -12,11 +12,16 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Insets;
 import android.graphics.PorterDuff;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
@@ -80,6 +85,14 @@ public class MainActivity extends Activity {
     private EditText smsToNumber;
     private EditText smsBody;
     private Button smsSend;
+    // Liquid Glass + 4-tab
+    private View headerGlass;
+    private View bottomTabBar;
+    private View settingsPanel;
+    private View callsPage;
+    private EditText searchInput;
+    private View searchPill;
+    private String searchQuery = "";
 
     private final List<BluetoothDevice> peers = new ArrayList<>();
     private RowListAdapter chatAdapter;
@@ -145,6 +158,37 @@ public class MainActivity extends Activity {
         Button startButton = findViewById(R.id.startButton);
         Button stopButton = findViewById(R.id.stopButton);
         Button refreshButton = findViewById(R.id.refreshButton);
+        headerGlass = findViewById(R.id.headerGlass);
+        bottomTabBar = findViewById(R.id.bottomTabBar);
+        settingsPanel = findViewById(R.id.settingsPanel);
+        callsPage = findViewById(R.id.callsPage);
+        searchInput = findViewById(R.id.searchInput);
+        searchPill = findViewById(R.id.searchPill);
+        View settingsGear = findViewById(R.id.settingsGear);
+        if (settingsGear != null) {
+            settingsGear.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) { tactile(v); ((RadioButton)findViewById(R.id.tabSettings)).setChecked(true); }
+            });
+        }
+        // blur glass surfaces
+        applyGlassBlur(headerGlass);
+        applyGlassBlur(bottomTabBar);
+        applyGlassBlur(searchPill);
+        applyGlassBlur(findViewById(R.id.composerPanel));
+        applyGlassBlur(findViewById(R.id.dialPad));
+        // search
+        if (searchInput != null) {
+            searchInput.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s,int a,int b,int c){}
+                @Override public void onTextChanged(CharSequence s,int a,int b,int c){}
+                @Override public void afterTextChanged(Editable s){ searchQuery = s.toString().trim().toLowerCase(Locale.US); rebuildLists(); }
+            });
+            View clear = findViewById(R.id.searchClear);
+            if (clear != null) clear.setOnClickListener(new View.OnClickListener(){@Override public void onClick(View v){ searchInput.setText(""); tactile(v);} });
+        }
+        // tactile for primary buttons
+        int[] tactileIds = new int[]{R.id.startButton,R.id.stopButton,R.id.refreshButton,R.id.smsSend,R.id.callDialButton,R.id.callAnswerButton,R.id.callRejectButton,R.id.threadBack,R.id.threadCall};
+        for(int id: tactileIds){ View bv=findViewById(id); if(bv!=null) bv.setOnTouchListener(new View.OnTouchListener(){@Override public boolean onTouch(View v,android.view.MotionEvent e){ if(e.getAction()==android.view.MotionEvent.ACTION_DOWN) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); return false; }}); }
 
         chatAdapter = new RowListAdapter(this);
         callAdapter = new RowListAdapter(this);
@@ -368,6 +412,9 @@ public class MainActivity extends Activity {
                 if (openThreadNumber != null && checkedId != R.id.tabChat) {
                     clearThreadUi();
                 }
+                // haptic on tab change
+                View checked = group.findViewById(checkedId);
+                if(checked!=null) checked.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 refreshAll();
             }
         });
@@ -380,38 +427,56 @@ public class MainActivity extends Activity {
     private boolean onContactsTab() {
         return tabGroup.getCheckedRadioButtonId() == R.id.tabContacts;
     }
+    private boolean onCallsTab(){ return tabGroup.getCheckedRadioButtonId()==R.id.tabCall; }
 
     private void refreshAll() {
         boolean sender = Prefs.get(this).isSender();
         headerSubtitle.setText(sender ? R.string.header_sender : R.string.header_receiver);
-        statusText.setText(sender ? R.string.status_sender : R.string.status_receiver);
+        if(statusText!=null) statusText.setText(sender ? R.string.status_sender : R.string.status_receiver);
 
-        tabGroup.setVisibility(sender ? View.GONE : View.VISIBLE);
-        simulateButton.setVisibility(sender ? View.VISIBLE : View.GONE);
+        // tabs always visible except in thread
+        if(bottomTabBar!=null) bottomTabBar.setVisibility(openThreadNumber!=null ? View.GONE : View.VISIBLE);
+        if(searchPill!=null) searchPill.setVisibility((openThreadNumber!=null || isSettingsTab()) ? View.GONE : View.VISIBLE);
+        if(simulateButton!=null) simulateButton.setVisibility(sender ? View.VISIBLE : View.GONE);
+
+        // settings version
+        TextView ver=findViewById(R.id.aboutVersion);
+        if(ver!=null) try{ ver.setText("v"+getPackageManager().getPackageInfo(getPackageName(),0).versionName);}catch(Exception ignored){}
 
         if (sender) {
-            chatList.setVisibility(View.VISIBLE);
-            callList.setVisibility(View.GONE);
+            // sender debug: logs in Chats, dialPad always, settings via tab
+            boolean isSet=isSettingsTab();
+            chatList.setVisibility(isSet?View.GONE:View.VISIBLE);
             contactList.setVisibility(View.GONE);
+            if(callsPage!=null) callsPage.setVisibility(View.GONE);
+            else if(callList!=null) callList.setVisibility(View.GONE);
+            if(settingsPanel!=null) settingsPanel.setVisibility(isSet?View.VISIBLE:View.GONE);
             threadPanel.setVisibility(View.GONE);
-            composerPanel.setVisibility(View.GONE);
-            dialPad.setVisibility(View.VISIBLE);
+            // composer only on chats when not settings
+            if(composerPanel!=null) composerPanel.setVisibility(View.GONE);
+            if(dialPad!=null) dialPad.setVisibility(isSet?View.GONE:View.VISIBLE);
         } else if (openThreadNumber != null) {
             chatList.setVisibility(View.GONE);
             contactList.setVisibility(View.GONE);
-            callList.setVisibility(View.GONE);
+            if(callsPage!=null) callsPage.setVisibility(View.GONE);
+            if(callList!=null) callList.setVisibility(View.GONE);
+            if(settingsPanel!=null) settingsPanel.setVisibility(View.GONE);
             threadPanel.setVisibility(View.VISIBLE);
-            composerPanel.setVisibility(View.VISIBLE);
-            dialPad.setVisibility(View.GONE);
+            if(composerPanel!=null) composerPanel.setVisibility(View.VISIBLE);
+            if(dialPad!=null) dialPad.setVisibility(View.GONE);
         } else {
             boolean chat = onChatTab();
             boolean contacts = onContactsTab();
+            boolean calls = onCallsTab();
+            boolean settings = isSettingsTab();
             chatList.setVisibility(chat ? View.VISIBLE : View.GONE);
             contactList.setVisibility(contacts ? View.VISIBLE : View.GONE);
-            callList.setVisibility((!chat && !contacts) ? View.VISIBLE : View.GONE);
+            if(callsPage!=null) callsPage.setVisibility(calls ? View.VISIBLE : View.GONE);
+            if(callList!=null) callList.setVisibility(calls ? View.VISIBLE : View.GONE);
+            if(settingsPanel!=null) settingsPanel.setVisibility(settings ? View.VISIBLE : View.GONE);
             threadPanel.setVisibility(View.GONE);
-            composerPanel.setVisibility(chat ? View.VISIBLE : View.GONE);
-            dialPad.setVisibility((!chat && !contacts) ? View.VISIBLE : View.GONE);
+            if(composerPanel!=null) composerPanel.setVisibility(chat ? View.VISIBLE : View.GONE);
+            if(dialPad!=null) dialPad.setVisibility(calls ? View.VISIBLE : View.GONE);
         }
 
         if (sender) {
@@ -873,20 +938,47 @@ public class MainActivity extends Activity {
 
         if (sender) {
             List<UiRow> log = buildSenderLog();
+            log = filterRows(log);
             addRows(chatAdapter, log, KEY_LOG);
             addRows(callAdapter, new ArrayList<>(log), KEY_LOG);
         } else {
-            addRows(chatAdapter, buildPeople(), KEY_CHAT);
-            addRows(callAdapter, buildReceiverCalls(), KEY_CALL);
-            buildContacts(contactAdapter);
+            List<UiRow> people=filterRows(buildPeople());
+            List<UiRow> calls=filterRows(buildReceiverCalls());
+            addRows(chatAdapter, people, KEY_CHAT);
+            addRows(callAdapter, calls, KEY_CALL);
+            buildContactsFiltered(contactAdapter);
             if (openThreadNumber != null) {
-                addRows(threadAdapter, buildThreadRows(openThreadNumber), openThreadNumber);
+                List<UiRow> thr=filterRows(buildThreadRows(openThreadNumber));
+                addRows(threadAdapter, thr, openThreadNumber);
             }
         }
         chatAdapter.notifyDataSetChanged();
         callAdapter.notifyDataSetChanged();
         contactAdapter.notifyDataSetChanged();
         threadAdapter.notifyDataSetChanged();
+    }
+    private List<UiRow> filterRows(List<UiRow> in){
+        if(searchQuery==null||searchQuery.isEmpty()) return in;
+        List<UiRow> out=new ArrayList<>();
+        for(UiRow r: in){
+            if(r.kind!=KIND_NORMAL){ out.add(r); continue; }
+            String hay=(r.title+" "+r.subtitle+" "+r.number+" "+r.name).toLowerCase(Locale.US);
+            if(hay.contains(searchQuery)) out.add(r);
+        }
+        return out;
+    }
+    private void buildContactsFiltered(RowListAdapter out){
+        // filtered
+        List<ContactsStore.Contact> contacts = ContactsStore.get(this).getAll();
+        List<UiRow> rows=new ArrayList<>();
+        UiRow sync = new UiRow(KIND_SYNC, R.drawable.ic_send, getColorRobust(R.color.primary), getString(R.string.contacts_sync), contacts.isEmpty()?getString(R.string.contacts_empty):getString(R.string.contacts_count, contacts.size()));
+        rows.add(sync);
+        for (ContactsStore.Contact c : contacts) {
+            UiRow row = new UiRow(R.drawable.ic_launcher, getColorRobust(R.color.row_tint), c.name.isEmpty()?c.number:c.name, c.number, "");
+            row.number=c.number; row.name=c.name; rows.add(row);
+        }
+        rows=filterRows(rows);
+        for(UiRow r: rows) out.add(r);
     }
 
     private void addRows(RowListAdapter out, List<UiRow> rows, String key) {
@@ -1117,11 +1209,24 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void applyGlassBlur(View v){
+        if(v==null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
+        try{ v.setRenderEffect(RenderEffect.createBlurEffect(20f,20f, Shader.TileMode.CLAMP)); }catch(Throwable ignored){}
+    }
+    private void tactile(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); }
+    private boolean isSettingsTab(){ return tabGroup!=null && tabGroup.getCheckedRadioButtonId()==R.id.tabSettings; }
+    private String initialsFor(String name){
+        if(name==null||name.isEmpty()) return "?";
+        String[] parts=name.trim().split("\\s+");
+        if(parts.length==1) return parts[0].substring(0,1).toUpperCase(Locale.US);
+        return (parts[0].substring(0,1)+parts[parts.length-1].substring(0,1)).toUpperCase(Locale.US);
+    }
+
     private int getColorRobust(int res) {
         try {
             return getColor(res);
         } catch (Throwable t) {
-            return 0xFF3D5AFE;
+            return 0xFF1677FF;
         }
     }
 
@@ -1192,43 +1297,72 @@ public class MainActivity extends Activity {
         RowListAdapter(Context c) {
             super(c, R.layout.list_item_row, R.id.rowTitle);
         }
-
+        @Override public int getViewTypeCount(){ return 3; }
+        @Override public int getItemViewType(int pos){
+            UiRow r=getItem(pos);
+            if(r!=null && r.snt!=null) return 1;
+            if(r!=null && r.rcv!=null) return 2;
+            return 0;
+        }
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View v = convertView;
-            if (v == null) {
-                v = android.view.LayoutInflater.from(getContext())
-                        .inflate(R.layout.list_item_row, parent, false);
-            }
             UiRow row = getItem(position);
             MainActivity act = (MainActivity) getContext();
+            int type=getItemViewType(position);
+            View v = convertView;
+            // inflate correct layout for type
+            if (v == null || (type==1 && v.findViewById(R.id.bubbleText)==null) || (type==0 && v.findViewById(R.id.avatarWrap)!=null && v.findViewById(R.id.bubbleText)!=null) || (type==0 && v.findViewById(R.id.avatarWrap)==null)) {
+                if(type==1) v = android.view.LayoutInflater.from(getContext()).inflate(R.layout.row_bubble_sent, parent, false);
+                else if(type==2) v = android.view.LayoutInflater.from(getContext()).inflate(R.layout.row_bubble_received, parent, false);
+                else v = android.view.LayoutInflater.from(getContext()).inflate(R.layout.list_item_row, parent, false);
+            } else if(type==1 && v.findViewById(R.id.bubbleText)==null){
+                v = android.view.LayoutInflater.from(getContext()).inflate(R.layout.row_bubble_sent, parent, false);
+            } else if(type==2 && v.findViewById(R.id.bubbleText)==null){
+                v = android.view.LayoutInflater.from(getContext()).inflate(R.layout.row_bubble_received, parent, false);
+            } else if(type==0 && v.findViewById(R.id.bubbleText)!=null){
+                v = android.view.LayoutInflater.from(getContext()).inflate(R.layout.list_item_row, parent, false);
+            }
+            if(type==1 || type==2){
+                TextView bt=v.findViewById(R.id.bubbleText);
+                TextView tm=v.findViewById(R.id.bubbleTime);
+                if(row.snt!=null){ bt.setText(row.snt.body); tm.setText(row.time); }
+                else if(row.rcv!=null){ bt.setText(row.rcv.body); tm.setText(row.time); }
+                else { bt.setText(row.title); tm.setText(row.time); }
+                return v;
+            }
+            // normal row with avatar
             ImageView icon = v.findViewById(R.id.rowIcon);
-            icon.setImageResource(row.icon);
-            icon.setColorFilter(row.color, PorterDuff.Mode.SRC_IN);
-            if (row.kind != 0) icon.setColorFilter(0xFF3D5AFE, PorterDuff.Mode.SRC_IN);
+            TextView avatarText=v.findViewById(R.id.avatarText);
+            View avatarWrap=v.findViewById(R.id.avatarWrap);
+            if(avatarText!=null){
+                String initials=act.initialsFor(row.title);
+                avatarText.setText(initials);
+                // tint avatar gradient could vary by hash, keep default
+                if(row.kind!=0){ avatarWrap.setVisibility(View.GONE); if(icon!=null) icon.setVisibility(View.VISIBLE); } else { avatarWrap.setVisibility(View.VISIBLE); if(icon!=null) icon.setVisibility(View.GONE); if(avatarText!=null && row.title!=null) avatarText.setText(initials); }
+            }
+            if(icon!=null){
+                icon.setImageResource(row.icon);
+                icon.setColorFilter(row.color, PorterDuff.Mode.SRC_IN);
+                if (row.kind != 0) icon.setColorFilter(0xFF1677FF, PorterDuff.Mode.SRC_IN);
+            }
             TextView title = v.findViewById(R.id.rowTitle);
             TextView sub = v.findViewById(R.id.rowSub);
             TextView time = v.findViewById(R.id.rowTime);
             if (row.kind == KIND_SEE_MORE) {
                 int extra = 0;
-                try {
-                    extra = Integer.parseInt(row.title);
-                } catch (Exception ignored) {
-                }
-                title.setText(extra > 0
-                        ? act.getString(R.string.see_more_n, extra)
-                        : act.getString(R.string.see_more));
+                try { extra = Integer.parseInt(row.title); } catch (Exception ignored) {}
+                title.setText(extra > 0 ? act.getString(R.string.see_more_n, extra) : act.getString(R.string.see_more));
                 title.setTextColor(act.getColorRobust(R.color.primary));
-                sub.setText("");
-                time.setText("");
+                sub.setText(""); time.setText("");
+                if(avatarWrap!=null) avatarWrap.setVisibility(View.GONE);
+                if(icon!=null){ icon.setVisibility(View.VISIBLE); icon.setColorFilter(act.getColorRobust(R.color.primary), PorterDuff.Mode.SRC_IN); }
             } else {
-                if (row.title == null || row.title.isEmpty()) {
-                    title.setText(act.getString(R.string.see_more));
-                } else {
-                    title.setText(row.title);
-                }
-                title.setTextColor(row.color);
+                if (row.title == null || row.title.isEmpty()) title.setText(act.getString(R.string.see_more));
+                else title.setText(row.title);
+                title.setTextColor(act.getColorRobust(R.color.text_primary));
+                // subtitle color secondary, but keep tint for accent? Use primary for title only
                 sub.setText(row.subtitle);
+                sub.setTextColor(act.getColorRobust(R.color.text_secondary));
                 time.setText(row.time);
             }
             return v;

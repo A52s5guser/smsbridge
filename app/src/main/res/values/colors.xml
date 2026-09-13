@@ -1,46 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#3D5AFE</color>
-    <color name="primary_dark">#2B3BA8</color>
-    <color name="accent">#3D5AFE</color>
+    <!-- Ant + Liquid Glass tokens (light) -->
+    <color name="primary">#1677FF</color>
+    <color name="primary_dark">#0958D9</color>
+    <color name="primary_light">#4096FF</color>
+    <color name="accent">#1677FF</color>
     <color name="on_accent">#FFFFFF</color>
+    <color name="secondary">#8B5CF6</color>
 
     <color name="bg">#F6F8FC</color>
     <color name="bg_top">#FAFBFE</color>
     <color name="bg_bottom">#E9EEF6</color>
-    <color name="surface">#FBFDFF</color>
+    <color name="surface">#FFFFFF</color>
 
-    <color name="glass_top">#F4FEFFFF</color>
-    <color name="glass_bottom">#E8FFFFFF</color>
-    <color name="glass_border">#1F16203A</color>
-    <color name="glass_sheen">#38FFFFFF</color>
+    <!-- Liquid Glass 60% / 20px blur -->
+    <color name="glass_top">#99FFFFFF</color>
+    <color name="glass_bottom">#99FFFFFF</color>
+    <color name="glass_border">#1A000000</color>
+    <color name="glass_sheen">#33FFFFFF</color>
+    <color name="glass_search">#99FFFFFF</color>
+    <color name="glass_composer">#99FFFFFF</color>
+    <color name="glass_tab">#99FFFFFF</color>
 
     <color name="surface_card">#FFFFFF</color>
-    <color name="card_border">#E2E7F1</color>
+    <color name="card_border">#F0F0F0</color>
 
-    <color name="header_top">#4C66FF</color>
-    <color name="header_bottom">#7A48F0</color>
+    <color name="header_top">#1677FF</color>
+    <color name="header_bottom">#8B5CF6</color>
     <color name="header_text">#FFFFFF</color>
     <color name="header_area">#EFF2F9</color>
 
-    <color name="text_primary">#15171F</color>
-    <color name="text_secondary">#565E73</color>
-    <color name="divider">#E3E8F2</color>
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_tertiary">#9CA3AF</color>
+    <color name="divider">#F0F0F0</color>
 
     <color name="ripple_color">#22000000</color>
-    <color name="row_tint">#3D5AFE</color>
+    <color name="row_tint">#1677FF</color>
 
-    <color name="call_in">#0A8A4C</color>
-    <color name="call_out">#2F47D6</color>
-    <color name="call_missed">#C0281D</color>
-    <color name="call_ended">#6E768C</color>
-    <color name="err">#BF2D22</color>
+    <color name="call_in">#16A34A</color>
+    <color name="call_out">#1677FF</color>
+    <color name="call_missed">#DC2626</color>
+    <color name="call_ended">#6B7280</color>
+    <color name="err">#DC2626</color>
+    <color name="success">#16A34A</color>
+    <color name="warning">#D97706</color>
 
-    <color name="tab_active">#3D5AFE</color>
-    <color name="tab_inactive">#E7EAF6</color>
-    <color name="tab_inactive_text">#4A5170</color>
+    <color name="tab_active">#1677FF</color>
+    <color name="tab_inactive">#F5F5F5</color>
+    <color name="tab_inactive_text">#8C8C8C</color>
     <color name="tab_text_checked">#FFFFFF</color>
     <color name="tab_text_unchecked">@color/tab_inactive_text</color>
 
-    <color name="seg_fill">#B3FFFFFF</color>
+    <color name="seg_fill">#F5F5F5</color>
+
+    <!-- Bubbles -->
+    <color name="bubble_sent">#1677FF</color>
+    <color name="bubble_sent_text">#FFFFFF</color>
+    <color name="bubble_received">#E9E9EB</color>
+    <color name="bubble_received_text">#111827</color>
+    <color name="bubble_time_sent">#CCFFFFFF</color>
+    <color name="bubble_time_received">#8C8C8C</color>
+
+    <!-- Avatars -->
+    <color name="avatar_start">#1677FF</color>
+    <color name="avatar_end">#8B5CF6</color>
+    <color name="avatar_text">#FFFFFF</color>
+
+    <!-- Search & Composer -->
+    <color name="search_hint">#9CA3AF</color>
+    <color name="search_icon">#8C8C8C</color>
 </resources>
