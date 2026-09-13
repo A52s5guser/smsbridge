@@ -21,6 +21,7 @@
     <color name="glass_search">#99FFFFFF</color>
     <color name="glass_composer">#99FFFFFF</color>
     <color name="glass_tab">#99FFFFFF</color>
+    <color name="rimlight">#4DFFFFFF</color>
 
     <color name="surface_card">#FFFFFF</color>
     <color name="card_border">#F0F0F0</color>

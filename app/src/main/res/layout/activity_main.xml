@@ -430,41 +430,6 @@
                     android:layout_marginLeft="4dp"
                     android:layout_marginTop="18dp"
                     android:layout_marginBottom="6dp"
-                    android:text="APPEARANCE"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp"
-                    android:letterSpacing="0.06" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_glass"
-                    android:elevation="2dp"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Theme follows system • Liquid Glass 20px / 60%"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="Blur is applied to header, tab bar and composer. Falls back to translucent on slower GPUs."
-                        android:textColor="@color/text_tertiary"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="4dp"
-                    android:layout_marginTop="18dp"
-                    android:layout_marginBottom="6dp"
                     android:text="ABOUT"
                     android:textColor="@color/text_secondary"
                     android:textSize="11sp"
@@ -505,6 +470,7 @@
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
+
     </FrameLayout>
 
     <!-- Floating pill composer (Apple) — glass + blur -->
@@ -600,13 +566,15 @@
             android:gravity="center"
             android:hint="@string/call_dialer_hint"
             android:inputType="phone"
-            android:minHeight="48dp"
-            android:paddingLeft="14dp"
-            android:paddingRight="14dp"
+            android:minHeight="40dp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:textColor="@color/text_primary"
             android:textColorHint="@color/search_hint"
-            android:textSize="22sp"
-            android:letterSpacing="0.04" />
+            android:textSize="16sp"
+            android:letterSpacing="0.02" />
 
         <!-- Simple 3-button row for now + dialer grid could be added later -->
         <LinearLayout
@@ -670,7 +638,8 @@
             android:text="@string/call_set_dialer"
             android:textColor="@color/text_primary"
             android:textSize="13sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Bottom Liquid Glass Tab Bar — 4 tabs -->
@@ -690,13 +659,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="2dp">
 
             <RadioButton
                 android:id="@+id/tabChat"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
                 android:background="@drawable/bg_tab"
                 android:button="@null"
                 android:checked="true"
@@ -712,8 +684,9 @@
                 android:id="@+id/tabContacts"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_marginLeft="4dp"
                 android:layout_weight="1"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
                 android:background="@drawable/bg_tab"
                 android:button="@null"
                 android:gravity="center"
@@ -728,8 +701,9 @@
                 android:id="@+id/tabCall"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_marginLeft="4dp"
                 android:layout_weight="1"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
                 android:background="@drawable/bg_tab"
                 android:button="@null"
                 android:gravity="center"
@@ -744,8 +718,9 @@
                 android:id="@+id/tabSettings"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_marginLeft="4dp"
                 android:layout_weight="1"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
                 android:background="@drawable/bg_tab"
                 android:button="@null"
                 android:gravity="center"

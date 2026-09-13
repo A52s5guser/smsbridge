@@ -21,7 +21,9 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
@@ -93,6 +95,9 @@ public class MainActivity extends Activity {
     private EditText searchInput;
     private View searchPill;
     private String searchQuery = "";
+    private long lastBackPress = 0;
+    private boolean firstRefresh = true;
+    private int lastTabId = -1;
 
     private final List<BluetoothDevice> peers = new ArrayList<>();
     private RowListAdapter chatAdapter;
@@ -170,12 +175,6 @@ public class MainActivity extends Activity {
                 @Override public void onClick(View v) { tactile(v); ((RadioButton)findViewById(R.id.tabSettings)).setChecked(true); }
             });
         }
-        // blur glass surfaces
-        applyGlassBlur(headerGlass);
-        applyGlassBlur(bottomTabBar);
-        applyGlassBlur(searchPill);
-        applyGlassBlur(findViewById(R.id.composerPanel));
-        applyGlassBlur(findViewById(R.id.dialPad));
         // search
         if (searchInput != null) {
             searchInput.addTextChangedListener(new TextWatcher() {
@@ -189,6 +188,7 @@ public class MainActivity extends Activity {
         // tactile for primary buttons
         int[] tactileIds = new int[]{R.id.startButton,R.id.stopButton,R.id.refreshButton,R.id.smsSend,R.id.callDialButton,R.id.callAnswerButton,R.id.callRejectButton,R.id.threadBack,R.id.threadCall};
         for(int id: tactileIds){ View bv=findViewById(id); if(bv!=null) bv.setOnTouchListener(new View.OnTouchListener(){@Override public boolean onTouch(View v,android.view.MotionEvent e){ if(e.getAction()==android.view.MotionEvent.ACTION_DOWN) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); return false; }}); }
+        setupSquircles();
 
         chatAdapter = new RowListAdapter(this);
         callAdapter = new RowListAdapter(this);
@@ -214,6 +214,7 @@ public class MainActivity extends Activity {
                 if (openThreadNumber != null) doCall(openThreadNumber);
             }
         });
+        setupSwipeBack();
 
         loadSavedState();
         setupRoleToggle();
@@ -412,12 +413,73 @@ public class MainActivity extends Activity {
                 if (openThreadNumber != null && checkedId != R.id.tabChat) {
                     clearThreadUi();
                 }
-                // haptic on tab change
                 View checked = group.findViewById(checkedId);
                 if(checked!=null) checked.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                // update G2 squircle for tabs
+                for(int id: new int[]{R.id.tabChat,R.id.tabContacts,R.id.tabCall,R.id.tabSettings}){
+                    View v=group.findViewById(id);
+                    if(v instanceof RadioButton){
+                        boolean isChecked = v.getId()==checkedId;
+                        int fill=isChecked? getColorRobust(R.color.tab_active) : 0x00000000;
+                        SquircleHelper.apply(v, fill, 18, 0, 0);
+                        ((RadioButton)v).setTextColor(isChecked? getColorRobust(R.color.tab_text_checked): getColorRobust(R.color.tab_text_unchecked));
+                    }
+                }
                 refreshAll();
             }
         });
+    }
+
+    private void setupSwipeBack(){
+        // swipe right on threadPanel to go back (iOS style)
+        final GestureDetector gd = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener(){
+            @Override public boolean onFling(MotionEvent e1, MotionEvent e2, float vx, float vy){
+                if(e1==null||e2==null) return false;
+                float dx=e2.getX()-e1.getX();
+                float dy=Math.abs(e2.getY()-e1.getY());
+                if(dx>120 && Math.abs(vx)>400 && dy<200 && openThreadNumber!=null){
+                    tactile(threadPanel); exitThread(); return true;
+                }
+                return false;
+            }
+        });
+        View.OnTouchListener tl=new View.OnTouchListener(){
+            @Override public boolean onTouch(View v, MotionEvent e){ gd.onTouchEvent(e); return false; }
+        };
+        if(threadPanel!=null) threadPanel.setOnTouchListener(tl);
+        if(threadList!=null) threadList.setOnTouchListener(tl);
+        if(threadBack!=null){
+            // also allow swipe on the back button itself
+            final float[] downX=new float[1];
+            threadBack.setOnTouchListener(new View.OnTouchListener(){
+                @Override public boolean onTouch(View v, MotionEvent e){
+                    if(e.getAction()==MotionEvent.ACTION_DOWN) downX[0]=e.getX();
+                    if(e.getAction()==MotionEvent.ACTION_UP){
+                        float dx=e.getX()-downX[0];
+                        if(Math.abs(dx)>30 && openThreadNumber!=null){ tactile(v); exitThread(); return true; }
+                    }
+                    gd.onTouchEvent(e);
+                    return false;
+                }
+            });
+            // keep click handling via separate listener? we already have click, need to preserve - use OnClick via touch will still fire click if not consumed
+        }
+    }
+
+    @Override
+    public void onBackPressed(){
+        if(openThreadNumber!=null){ exitThread(); return; }
+        if(!onChatTab()){
+            ((RadioButton)findViewById(R.id.tabChat)).setChecked(true);
+            return;
+        }
+        long now=System.currentTimeMillis();
+        if(now - lastBackPress < 2000){
+            super.onBackPressed();
+            return;
+        }
+        lastBackPress=now;
+        Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
     }
 
     private boolean onChatTab() {
@@ -444,17 +506,18 @@ public class MainActivity extends Activity {
         if(ver!=null) try{ ver.setText("v"+getPackageManager().getPackageInfo(getPackageName(),0).versionName);}catch(Exception ignored){}
 
         if (sender) {
-            // sender debug: logs in Chats, dialPad always, settings via tab
             boolean isSet=isSettingsTab();
-            chatList.setVisibility(isSet?View.GONE:View.VISIBLE);
+            boolean chat=onChatTab();
+            boolean calls=onCallsTab();
+            chatList.setVisibility(isSet?View.GONE:(chat?View.VISIBLE:View.GONE));
             contactList.setVisibility(View.GONE);
-            if(callsPage!=null) callsPage.setVisibility(View.GONE);
-            else if(callList!=null) callList.setVisibility(View.GONE);
+            if(callsPage!=null) callsPage.setVisibility(isSet?View.GONE:(calls?View.VISIBLE:View.GONE));
+            else if(callList!=null) callList.setVisibility(isSet?View.GONE:(calls?View.VISIBLE:View.GONE));
             if(settingsPanel!=null) settingsPanel.setVisibility(isSet?View.VISIBLE:View.GONE);
             threadPanel.setVisibility(View.GONE);
-            // composer only on chats when not settings
             if(composerPanel!=null) composerPanel.setVisibility(View.GONE);
-            if(dialPad!=null) dialPad.setVisibility(isSet?View.GONE:View.VISIBLE);
+            if(dialPad!=null) dialPad.setVisibility(isSet?View.GONE:(calls?View.VISIBLE:View.GONE));
+            if(smsToNumber!=null) smsToNumber.setVisibility(View.GONE);
         } else if (openThreadNumber != null) {
             chatList.setVisibility(View.GONE);
             contactList.setVisibility(View.GONE);
@@ -464,6 +527,7 @@ public class MainActivity extends Activity {
             threadPanel.setVisibility(View.VISIBLE);
             if(composerPanel!=null) composerPanel.setVisibility(View.VISIBLE);
             if(dialPad!=null) dialPad.setVisibility(View.GONE);
+            if(smsToNumber!=null) smsToNumber.setVisibility(View.GONE);
         } else {
             boolean chat = onChatTab();
             boolean contacts = onContactsTab();
@@ -477,6 +541,7 @@ public class MainActivity extends Activity {
             threadPanel.setVisibility(View.GONE);
             if(composerPanel!=null) composerPanel.setVisibility(chat ? View.VISIBLE : View.GONE);
             if(dialPad!=null) dialPad.setVisibility(calls ? View.VISIBLE : View.GONE);
+            if(smsToNumber!=null) smsToNumber.setVisibility(chat ? View.VISIBLE : View.GONE);
         }
 
         if (sender) {
@@ -490,6 +555,26 @@ public class MainActivity extends Activity {
         }
 
         rebuildLists();
+        // liquid slide for content switch
+        View newVisible=null;
+        if(openThreadNumber!=null) newVisible=threadPanel;
+        else if(isSettingsTab()) newVisible=settingsPanel;
+        else if(onChatTab()) newVisible=chatList;
+        else if(onContactsTab()) newVisible=contactList;
+        else if(onCallsTab()) newVisible=callsPage!=null?callsPage:callList;
+        if(!firstRefresh && newVisible!=null && newVisible.getVisibility()==View.VISIBLE){
+            int curTab = tabGroup!=null?tabGroup.getCheckedRadioButtonId():-1;
+            if(openThreadNumber!=null) curTab = -2; // thread is separate
+            if(curTab != lastTabId){
+                float d=16*getResources().getDisplayMetrics().density;
+                newVisible.setTranslationX(d); newVisible.setAlpha(0f);
+                newVisible.animate().translationX(0).alpha(1f).setDuration(220).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+                lastTabId=curTab;
+            }
+        } else if(firstRefresh){
+            firstRefresh=false;
+            lastTabId = openThreadNumber!=null? -2 : (tabGroup!=null?tabGroup.getCheckedRadioButtonId():-1);
+        }
     }
 
     // ------------------------------------------------------------------- peer & service
@@ -829,7 +914,7 @@ public class MainActivity extends Activity {
                     return;
                 }
                 if (row.number != null && !row.number.isEmpty()) {
-                    openCompose(row.number, "");
+                    openThread(row.number);
                 }
             }
         });
@@ -987,7 +1072,7 @@ public class MainActivity extends Activity {
                     "Nothing here yet", "", ""));
             return;
         }
-        if (expanded.contains(key) || rows.size() <= SEE_MORE_LIMIT) {
+        if (KEY_CHAT.equals(key) || expanded.contains(key) || rows.size() <= SEE_MORE_LIMIT) {
             for (UiRow r : rows) out.add(r);
             return;
         }
@@ -1209,9 +1294,68 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void applyGlassBlur(View v){
-        if(v==null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
-        try{ v.setRenderEffect(RenderEffect.createBlurEffect(20f,20f, Shader.TileMode.CLAMP)); }catch(Throwable ignored){}
+    private void setupSquircles(){
+        int glass = getColorRobust(R.color.glass_top);
+        int rim = getColorRobust(R.color.rimlight);
+        int ripple = getColorRobust(R.color.ripple_color);
+        int primary = getColorRobust(R.color.primary);
+        int surface = getColorRobust(R.color.surface_card);
+        // header, tab bar, composer, dialPad - 24dp classic squircle with subtle 0.3dp rimlight
+        SquircleHelper.apply(findViewById(R.id.headerGlass), glass, 24, 0.3f, rim);
+        SquircleHelper.apply(findViewById(R.id.bottomTabBar), getColorRobust(R.color.glass_tab), 24, 0.3f, rim);
+        SquircleHelper.apply(findViewById(R.id.searchPill), getColorRobust(R.color.glass_search), 999, 0.3f, rim);
+        SquircleHelper.apply(findViewById(R.id.composerPanel), glass, 24, 0.3f, rim);
+        SquircleHelper.apply(findViewById(R.id.composerPill), getColorRobust(R.color.glass_composer), 999, 0.3f, rim);
+        SquircleHelper.apply(findViewById(R.id.dialPad), glass, 24, 0.3f, rim);
+        SquircleHelper.apply(findViewById(R.id.settingsPanel), glass, 24, 1, rim); // scrollview bg? will be handled via inner cards
+        // buttons - 16dp G2 with ripple
+        int[] btns = new int[]{R.id.startButton,R.id.stopButton,R.id.refreshButton,R.id.threadBack,R.id.settingsGear,R.id.searchClear};
+        for(int id: btns){ View v=findViewById(id); if(v!=null) SquircleHelper.applyRipple(v, glass, ripple, 16, 0.3f, rim); }
+        SquircleHelper.applyRipple(findViewById(R.id.smsSend), primary, ripple, 999, 0, 0);
+        SquircleHelper.applyRipple(findViewById(R.id.callDialButton), primary, ripple, 16, 0, 0);
+        SquircleHelper.applyRipple(findViewById(R.id.callAnswerButton), getColorRobust(R.color.call_in), ripple, 16, 0, 0);
+        SquircleHelper.applyRipple(findViewById(R.id.callRejectButton), getColorRobust(R.color.err), ripple, 16, 0, 0);
+        // tab pills are already squircle via bg_tab but we override for G2
+        int tabActive=getColorRobust(R.color.tab_active);
+        int tabInactive=0x00000000;
+        for(int id: new int[]{R.id.tabChat,R.id.tabContacts,R.id.tabCall,R.id.tabSettings}){
+            View v=findViewById(id); if(v!=null){
+                boolean checked=((RadioButton)v).isChecked();
+                int fill=checked?tabActive:tabInactive;
+                SquircleHelper.apply(v, fill, 18, 0, 0);
+            }
+        }
+        // settings inner cards - find them via tags? apply to all with bg_glass
+        View sp=findViewById(R.id.settingsPanel);
+        if(sp!=null) applySquircleToChildren((ViewGroup)sp, glass, rim);
+        View tp=findViewById(R.id.threadPanel);
+        if(tp!=null) applySquircleToChildren((ViewGroup)tp, glass, rim);
+    }
+    private void applySquircleToChildren(ViewGroup g, int fill, int rim){
+        if(g==null) return;
+        for(int i=0;i<g.getChildCount();i++){
+            View c=g.getChildAt(i);
+            if(c instanceof ViewGroup) applySquircleToChildren((ViewGroup)c, fill, rim);
+            if(c.getBackground()!=null && c.getId()==View.NO_ID){
+                // heuristic: if it had bg_glass, replace
+                // we check tag or background constant state? simplify: if width>50 and height>30 and c instanceof LinearLayout
+                if(c instanceof LinearLayout && c.getBackground()!=null){
+                    // only apply if not already squircle
+                    // check if it's a card (elevation>0)
+                    if(c.getElevation()>0) SquircleHelper.apply(c, fill, 16, 0.3f, rim);
+                }
+            }
+        }
+    }
+    private void liquidSlide(View from, View to){
+        if(from==null||to==null||from==to) return;
+        float d = 16 * getResources().getDisplayMetrics().density;
+        // from out to left
+        from.animate().translationX(-d).alpha(0f).setDuration(180).setInterpolator(new android.view.animation.DecelerateInterpolator()).withEndAction(new Runnable(){@Override public void run(){ from.setVisibility(View.GONE); from.setTranslationX(0); from.setAlpha(1f); }}).start();
+        // to in from right
+        to.setVisibility(View.VISIBLE);
+        to.setTranslationX(d); to.setAlpha(0f);
+        to.animate().translationX(0).alpha(1f).setDuration(220).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
     }
     private void tactile(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); }
     private boolean isSettingsTab(){ return tabGroup!=null && tabGroup.getCheckedRadioButtonId()==R.id.tabSettings; }
@@ -1220,6 +1364,16 @@ public class MainActivity extends Activity {
         String[] parts=name.trim().split("\\s+");
         if(parts.length==1) return parts[0].substring(0,1).toUpperCase(Locale.US);
         return (parts[0].substring(0,1)+parts[parts.length-1].substring(0,1)).toUpperCase(Locale.US);
+    }
+    private int avatarColorFor(String key){
+        if(key==null) key="";
+        int[] palette=new int[]{
+            0xFF7FB069, 0xFFE07A5F, 0xFF81B29A, 0xFFF2CC8F, 0xFF9A8C98, 0xFFC9ADA7,
+            0xFFA7C4BC, 0xFFB5838D, 0xFF8D99AE, 0xFFEDAFB8, 0xFF90BE6D, 0xFFF4A261,
+            0xFF9AB8D3, 0xFFD8B4FE, 0xFFA9DEF9, 0xFFFFC6FF
+        };
+        int h=Math.abs(key.hashCode());
+        return palette[h % palette.length];
     }
 
     private int getColorRobust(int res) {
@@ -1328,6 +1482,13 @@ public class MainActivity extends Activity {
                 if(row.snt!=null){ bt.setText(row.snt.body); tm.setText(row.time); }
                 else if(row.rcv!=null){ bt.setText(row.rcv.body); tm.setText(row.time); }
                 else { bt.setText(row.title); tm.setText(row.time); }
+                // G2 squircle bubbles: sent 18,18,4,18 / received 18,18,18,4 with rimlight 0
+                View bubble = ((ViewGroup)v).getChildAt(0);
+                if(bubble!=null){
+                    int fill = type==1 ? act.getColorRobust(R.color.bubble_sent) : act.getColorRobust(R.color.bubble_received);
+                    if(type==1) SquircleHelper.applyAsym(bubble, fill, 18,18,4,18, 0, 0);
+                    else SquircleHelper.applyAsym(bubble, fill, 18,18,18,4, 0, 0);
+                }
                 return v;
             }
             // normal row with avatar
@@ -1360,11 +1521,21 @@ public class MainActivity extends Activity {
                 if (row.title == null || row.title.isEmpty()) title.setText(act.getString(R.string.see_more));
                 else title.setText(row.title);
                 title.setTextColor(act.getColorRobust(R.color.text_primary));
-                // subtitle color secondary, but keep tint for accent? Use primary for title only
                 sub.setText(row.subtitle);
                 sub.setTextColor(act.getColorRobust(R.color.text_secondary));
                 time.setText(row.time);
             }
+            // Classic squircle for row card + soft avatar colors
+            try{
+                int surf=act.getColorRobust(R.color.surface_card);
+                int rim=act.getColorRobust(R.color.rimlight);
+                SquircleHelper.apply(v, surf, 16, 0.3f, rim);
+                View av=v.findViewById(R.id.avatarWrap);
+                if(av!=null){
+                    int avColor=act.avatarColorFor(row.title!=null?row.title:row.number);
+                    SquircleHelper.apply(av, avColor, 20, 0, 0);
+                }
+            }catch(Throwable ignored){}
             return v;
         }
     }

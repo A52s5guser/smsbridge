@@ -1,18 +1,37 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Liquid glass squircle background -->
     <path
-        android:fillColor="#1E88E5"
-        android:pathData="M12,2C6.48,2 2,6.03 2,11c0,2.52 1.17,4.82 3.08,6.5L4.6,22l4.59,-2.32c0.9,0.22 1.85,0.34 2.81,0.34 5.52,0 10,-4.03 10,-9s-4.48,-9 -10,-9z" />
+        android:fillColor="#1677FF"
+        android:pathData="M 24,0 H 84 C 96,0 108,12 108,24 V 84 C 108,96 96,108 84,108 H 24 C 12,108 0,96 0,84 V 24 C 0,12 12,0 24,0 Z" />
+    <path
+        android:fillColor="#8B5CF6"
+        android:pathData="M 24,0 H 84 C 96,0 108,12 108,24 V 84 C 108,96 96,108 84,108 H 24 C 12,108 0,96 0,84 V 24 C 0,12 12,0 24,0 Z"
+        android:fillAlpha="0.85" />
+    <!-- Glass highlight top -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M6.5,10 A1.5,1.5 0,1 0,6.5 13 A1.5,1.5 0,1 0,6.5 10" />
+        android:fillAlpha="0.22"
+        android:pathData="M 24,0 H 84 C 96,0 108,12 108,24 V 40 C 108,28 96,16 84,16 H 24 C 12,16 0,28 0,40 V 24 C 0,12 12,0 24,0 Z" />
+    <!-- Inner rimlight -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.35"
+        android:pathData="M 24,1 H 84 C 95,1 107,12 107,24 V 84 C 107,95 95,107 84,107 H 24 C 12,107 1,95 1,84 V 24 C 1,12 12,1 24,1 Z"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Message bubble glass -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M12,10 A1.5,1.5 0,1 0,12 13 A1.5,1.5 0,1 0,12 10" />
+        android:fillAlpha="0.96"
+        android:pathData="M 54,32 C 32,32 22,44 22,58 C 22,72 32,84 54,84 L 72,84 L 78,94 L 76,84 H 54 C 76,84 86,72 86,58 C 86,44 76,32 54,32 Z" />
+    <!-- Three dots subtle -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M17.5,10 A1.5,1.5 0,1 0,17.5 13 A1.5,1.5 0,1 0,17.5 10" />
+        android:fillColor="#1677FF"
+        android:fillAlpha="0.9"
+        android:pathData="M 38,58 A 5,5 0,1 0,38 68 A 5,5 0,1 0,38 58 Z M 54,58 A 5,5 0,1 0,54 68 A 5,5 0,1 0,54 58 Z M 70,58 A 5,5 0,1 0,70 68 A 5,5 0,1 0,70 58 Z" />
 </vector>
