@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#4C63F0</color>
+    <color name="primary_dark">#2C3BA8</color>
+    <color name="accent">#4C63F0</color>
+    <color name="on_accent">#FFFFFF</color>
+
+    <color name="bg">#0C1018</color>
+    <color name="bg_top">#0F141D</color>
+    <color name="bg_bottom">#080B11</color>
+    <color name="surface">#151B27</color>
+
+    <color name="glass_top">#E6202A3D</color>
+    <color name="glass_bottom">#D4151C2B</color>
+    <color name="glass_border">#33FFFFFF</color>
+    <color name="glass_sheen">#1CFFFFFF</color>
+
+    <color name="surface_card">#151B27</color>
+    <color name="card_border">#232B3A</color>
+
+    <color name="header_top">#3A52E9</color>
+    <color name="header_bottom">#6B3FE0</color>
+    <color name="header_text">#FFFFFF</color>
+    <color name="header_area">#070A10</color>
+
+    <color name="text_primary">#E9ECF4</color>
+    <color name="text_secondary">#9AA4B8</color>
+    <color name="divider">#232B3A</color>
+
+    <color name="ripple_color">#22FFFFFF</color>
+    <color name="row_tint">#8C9DFC</color>
+
+    <color name="call_in">#20A86E</color>
+    <color name="call_out">#7E92FF</color>
+    <color name="call_missed">#FF6F66</color>
+    <color name="call_ended">#8A93A6</color>
+    <color name="err">#FF6256</color>
+
+    <color name="tab_active">#4C63F0</color>
+    <color name="tab_inactive">#1A2130</color>
+    <color name="tab_inactive_text">#B8C1D8</color>
+    <color name="tab_text_checked">#FFFFFF</color>
+    <color name="tab_text_unchecked">@color/tab_inactive_text</color>
+
+    <color name="seg_fill">#241B2333</color>
+</resources>

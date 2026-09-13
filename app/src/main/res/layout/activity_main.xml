@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_app"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:background="@drawable/bg_header"
+        android:elevation="6dp"
+        android:orientation="vertical"
+        android:paddingLeft="18dp"
+        android:paddingTop="16dp"
+        android:paddingRight="18dp"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:padding="8dp"
+                android:background="@drawable/bg_icon_chip"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/ic_launcher" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_name"
+                    android:textColor="@color/header_text"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/headerSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:text="@string/header_sender"
+                    android:textColor="#E2E9FF"
+                    android:textSize="13sp"
+                    android:alpha="0.92" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/bg_panel"
+        android:elevation="3dp"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <RadioGroup
+            android:id="@+id/roleGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_seg"
+            android:orientation="horizontal"
+            android:padding="3dp">
+
+            <RadioButton
+                android:id="@+id/roleSender"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_tab"
+                android:button="@null"
+                android:gravity="center"
+                android:minWidth="0dp"
+                android:text="@string/role_sender_short"
+                android:textColor="@color/tab_text"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <RadioButton
+                android:id="@+id/roleReceiver"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginLeft="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_tab"
+                android:button="@null"
+                android:gravity="center"
+                android:minWidth="0dp"
+                android:text="@string/role_receiver_short"
+                android:textColor="@color/tab_text"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/peerSpinner"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:minHeight="44dp" />
+
+            <Button
+                android:id="@+id/refreshButton"
+                android:layout_width="48dp"
+                android:layout_height="44dp"
+                android:layout_marginLeft="4dp"
+                android:background="@drawable/bg_btn_glass"
+                android:minWidth="0dp"
+                android:padding="0dp"
+                android:text="@string/refresh_short"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/status"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/startButton"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_btn_primary"
+                android:minWidth="78dp"
+                android:minHeight="44dp"
+                android:text="@string/start"
+                android:textColor="@color/on_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/stopButton"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginLeft="6dp"
+                android:background="@drawable/bg_btn_glass"
+                android:minWidth="66dp"
+                android:minHeight="44dp"
+                android:text="@string/stop"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/simulateButton"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginLeft="6dp"
+                android:background="@drawable/bg_btn_glass"
+                android:minWidth="0dp"
+                android:minHeight="44dp"
+                android:paddingLeft="14dp"
+                android:paddingRight="14dp"
+                android:text="@string/simulate_short"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <RadioGroup
+        android:id="@+id/tabGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/bg_seg"
+        android:elevation="2dp"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <RadioButton
+            android:id="@+id/tabChat"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_tab"
+            android:button="@null"
+            android:checked="true"
+            android:gravity="center"
+            android:minWidth="0dp"
+            android:text="@string/tab_chats"
+            android:textColor="@color/tab_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:id="@+id/tabContacts"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginLeft="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_tab"
+            android:button="@null"
+            android:gravity="center"
+            android:minWidth="0dp"
+            android:text="@string/tab_contacts"
+            android:textColor="@color/tab_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:id="@+id/tabCall"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginLeft="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_tab"
+            android:button="@null"
+            android:gravity="center"
+            android:minWidth="0dp"
+            android:text="@string/tab_calls"
+            android:textColor="@color/tab_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </RadioGroup>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1">
+
+        <ListView
+            android:id="@+id/chatList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="8dp"
+            android:clipToPadding="false"
+            android:listSelector="@android:color/transparent"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="12dp"
+            android:scrollbars="none" />
+
+        <ListView
+            android:id="@+id/contactList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="6dp"
+            android:clipToPadding="false"
+            android:listSelector="@android:color/transparent"
+            android:paddingTop="4dp"
+            android:paddingBottom="12dp"
+            android:scrollbars="none"
+            android:visibility="gone" />
+
+        <ListView
+            android:id="@+id/callList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="8dp"
+            android:clipToPadding="false"
+            android:listSelector="@android:color/transparent"
+            android:paddingTop="4dp"
+            android:paddingBottom="12dp"
+            android:scrollbars="none"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/threadPanel"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/bg_panel"
+            android:elevation="2dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <Button
+                android:id="@+id/threadBack"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_btn_glass"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="‹"
+                android:textColor="@color/text_primary"
+                android:textSize="28sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/threadTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/threadSub"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/threadCall"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_btn_answer"
+                android:minHeight="0dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:text="@string/act_call"
+                android:textColor="@color/on_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/threadList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="8dp"
+            android:clipToPadding="false"
+            android:listSelector="@android:color/transparent"
+            android:paddingTop="2dp"
+            android:paddingBottom="8dp"
+            android:scrollbars="none" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/composerPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:background="@drawable/bg_panel"
+        android:elevation="3dp"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <EditText
+            android:id="@+id/smsToNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_field"
+            android:hint="@string/sms_to_hint"
+            android:inputType="phone"
+            android:minHeight="48dp"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/smsBody"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_field"
+                android:hint="@string/sms_body_hint"
+                android:inputType="textMultiLine"
+                android:minLines="2"
+                android:padding="14dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/smsSend"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginLeft="8dp"
+                android:background="@drawable/bg_btn_primary"
+                android:minWidth="0dp"
+                android:minHeight="48dp"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
+                android:text="@string/sms_send_short"
+                android:textColor="@color/on_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/dialPad"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:background="@drawable/bg_panel"
+        android:elevation="3dp"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <EditText
+            android:id="@+id/callNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_field"
+            android:hint="@string/call_dialer_hint"
+            android:inputType="phone"
+            android:minHeight="48dp"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/callDialButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_btn_primary"
+                android:singleLine="true"
+                android:text="@string/call_dial"
+                android:textColor="@color/on_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/callAnswerButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_btn_answer"
+                android:singleLine="true"
+                android:text="@string/call_answer"
+                android:textColor="@color/on_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/callRejectButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_btn_reject"
+                android:singleLine="true"
+                android:text="@string/call_reject"
+                android:textColor="@color/on_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/callDialerButton"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_btn_glass"
+            android:minHeight="44dp"
+            android:text="@string/call_set_dialer"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>
