@@ -2,12 +2,24 @@
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="@color/ripple_color">
     <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:endColor="@color/err"
-                android:startColor="@color/err" />
-            <corners android:radius="16dp" />
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/err" />
+                    <corners android:radius="16dp" />
+                </shape>
+            </item>
+            <item android:top="1dp" android:left="1dp" android:right="1dp">
+                <inset android:insetBottom="60%">
+                    <shape android:shape="rectangle">
+                        <gradient
+                            android:angle="90"
+                            android:startColor="@color/glass_sheen"
+                            android:endColor="@android:color/transparent" />
+                        <corners android:topLeftRadius="15dp" android:topRightRadius="15dp" />
+                    </shape>
+                </inset>
+            </item>
+        </layer-list>
     </item>
 </ripple>
