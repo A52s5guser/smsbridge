@@ -66,9 +66,7 @@ public class MainActivity extends Activity {
 
     private RadioGroup roleGroup;
     private NavigationBarView tabGroup;
-    private ListView peerList;
-    private TextView peerEmpty;
-    private PeerAdapter peerListAdapter;
+    private android.widget.AutoCompleteTextView peerDropdown;
     private TextView statusText;
     private TextView headerSubtitle;
     private ListView chatList;
@@ -137,19 +135,15 @@ public class MainActivity extends Activity {
 
         roleGroup = findViewById(R.id.roleGroup);
         tabGroup = findViewById(R.id.tabGroup);
-        peerList = findViewById(R.id.peerList);
-        peerEmpty = findViewById(R.id.peerEmpty);
-        if (peerList != null) {
-            peerListAdapter = new PeerAdapter(this);
-            peerList.setAdapter(peerListAdapter);
-            peerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        peerDropdown = findViewById(R.id.peerDropdown);
+        if (peerDropdown != null) {
+            peerDropdown.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     if (position < 0 || position >= peers.size()) return;
                     BluetoothDevice dev = peers.get(position);
                     Prefs.get(MainActivity.this).setPeer(dev.getAddress(), dev.getName());
                     tap(view);
-                    peerListAdapter.notifyDataSetChanged();
                     refreshAll();
                 }
             });
@@ -447,34 +441,6 @@ public class MainActivity extends Activity {
         });
     }
 
-    static class PeerAdapter extends ArrayAdapter<BluetoothDevice> {
-        PeerAdapter(Context c) {
-            super(c, R.layout.peer_row);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View v = convertView;
-            if (v == null) {
-                v = android.view.LayoutInflater.from(getContext())
-                        .inflate(R.layout.peer_row, parent, false);
-            }
-            MainActivity act = (MainActivity) getContext();
-            BluetoothDevice dev = getItem(position);
-            TextView name = v.findViewById(R.id.peerName);
-            TextView mac = v.findViewById(R.id.peerMac);
-            RadioButton check = v.findViewById(R.id.peerCheck);
-            if (dev != null) {
-                String label = dev.getName();
-                name.setText(label == null || label.isEmpty() ? dev.getAddress() : label);
-                mac.setText(dev.getAddress());
-                String saved = Prefs.get(act).getPeerMac();
-                check.setChecked(saved != null && saved.equals(dev.getAddress()));
-            }
-            return v;
-        }
-    }
-
     private void setupTabs() {
         tabGroup.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
@@ -651,13 +617,24 @@ public class MainActivity extends Activity {
         if (bonded != null) {
             peers.addAll(bonded);
         }
-        if (peerListAdapter != null) {
-            peerListAdapter.clear();
-            for (BluetoothDevice d : peers) peerListAdapter.add(d);
-            peerListAdapter.notifyDataSetChanged();
+        if (peerDropdown != null) {
+            java.util.List<String> labels = new java.util.ArrayList<>();
+            String savedMac = Prefs.get(this).getPeerMac();
+            int savedPos = -1;
+            for (int i = 0; i < peers.size(); i++) {
+                BluetoothDevice d = peers.get(i);
+                String label = BtController.deviceLabel(d);
+                labels.add(label);
+                if (savedMac != null && savedMac.equals(d.getAddress())) savedPos = i;
+            }
+            if (labels.isEmpty()) labels.add(getString(R.string.peer_none));
+            ArrayAdapter<String> dropAdapter = new ArrayAdapter<>(this,
+                    com.google.android.material.R.layout.mtrl_auto_complete_simple_item, labels);
+            peerDropdown.setAdapter(dropAdapter);
+            if (savedPos >= 0) peerDropdown.setText(labels.get(savedPos), false);
+            else if (!peers.isEmpty()) peerDropdown.setText(labels.get(0), false);
+            else peerDropdown.setText(getString(R.string.peer_none), false);
         }
-        if (peerEmpty != null) peerEmpty.setVisibility(peers.isEmpty() ? View.VISIBLE : View.GONE);
-        if (peerList != null) peerList.setVisibility(peers.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     private void onStartPressed() {

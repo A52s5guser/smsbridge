@@ -306,37 +306,33 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
-                            android:id="@+id/peerEmpty"
+                        <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/peer_none"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:hint="Paired phone"
+                            app:endIconMode="dropdown_menu">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/peerDropdown"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:textColor="@color/text_primary" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/refreshButton"
                             style="@style/Widget.Material3.Button.IconButton"
                             android:layout_width="48dp"
                             android:layout_height="48dp"
+                            android:layout_marginLeft="8dp"
                             android:contentDescription="@string/refresh"
                             android:insetLeft="0dp"
                             android:insetRight="0dp"
                             app:icon="@drawable/ic_refresh"
                             app:iconPadding="0dp" />
                     </LinearLayout>
-
-                    <ListView
-                        android:id="@+id/peerList"
-                        android:layout_width="match_parent"
-                        android:layout_height="192dp"
-                        android:background="@android:color/transparent"
-                        android:clipToPadding="false"
-                        android:divider="@drawable/m3_divider"
-                        android:dividerHeight="1dp"
-                        android:listSelector="@android:color/transparent"
-                        android:scrollbars="vertical" />
 
                     <TextView
                         android:id="@+id/statusText"
