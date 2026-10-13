@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Material 3 baseline scheme, seed #6750A4 (dark) -->
-    <color name="primary">#D0BCFF</color>
-    <color name="primary_dark">#4F378B</color>
-    <color name="primary_light">#EADDFF</color>
-    <color name="accent">#D0BCFF</color>
-    <color name="on_accent">#381E72</color>
-    <color name="secondary">#CCC2DC</color>
+    <color name="primary">#A8C7FA</color>
+    <color name="primary_dark">#004A77</color>
+    <color name="primary_light">#D3E3FD</color>
+    <color name="accent">#A8C7FA</color>
+    <color name="on_accent">#062E6F</color>
+    <color name="secondary">#BBC7DB</color>
     <color name="on_secondary">#332D41</color>
     <color name="secondary_container">#4A4458</color>
     <color name="on_secondary_container">#E8DEF8</color>
@@ -17,10 +17,10 @@
     <color name="tertiary_container">#633B48</color>
     <color name="on_tertiary_container">#FFD8E4</color>
 
-    <color name="bg">#141218</color>
-    <color name="bg_top">#141218</color>
-    <color name="bg_bottom">#1D1B20</color>
-    <color name="surface">#141218</color>
+    <color name="bg">#0B0E14</color>
+    <color name="bg_top">#0B0E14</color>
+    <color name="bg_bottom">#12161C</color>
+    <color name="surface">#0B0E14</color>
     <color name="surface_container_lowest">#0F0D13</color>
     <color name="surface_container_low">#1D1B20</color>
     <color name="surface_container">#211F26</color>

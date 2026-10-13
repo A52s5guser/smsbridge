@@ -824,8 +824,10 @@ public class MainActivity extends AppCompatActivity {
         }
         final String finalTo = to;
         final String finalBody = body;
-        OutboxStore.get(this).add(finalTo, finalBody, "queued");
         final String msgId = String.valueOf(System.nanoTime() & 0xFFFFFFFFL);
+        OutboxStore.get(this).add(finalTo, finalBody, "queued", msgId);
+        smsBody.setText("");
+        sendAnim(smsSend);
         exec.execute(new Runnable() {
             @Override
             public void run() {
@@ -1394,6 +1396,16 @@ public class MainActivity extends AppCompatActivity {
         to.animate().translationX(0).alpha(1f).setDuration(220).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
     }
     private void tap(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); }
+    private void sendAnim(View v){
+        if(v==null) return;
+        v.animate().scaleX(0.85f).scaleY(0.85f).setDuration(90)
+                .withEndAction(new Runnable(){
+                    @Override public void run(){
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(140)
+                                .setInterpolator(new android.view.animation.OvershootInterpolator(2f)).start();
+                    }
+                }).start();
+    }
     private void confirm(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.CONFIRM); }
     private void buzzReject(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.REJECT); }
     private boolean isSettingsTab(){ return tabGroup!=null && tabGroup.getSelectedItemId()==R.id.tabSettings; }
@@ -1424,7 +1436,7 @@ public class MainActivity extends AppCompatActivity {
     private void applySavedTheme() {
         String t = Prefs.get(this).getTheme();
         if (Prefs.THEME_MONO.equals(t)) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             setTheme(R.style.AppTheme_Mono);
         } else if (Prefs.THEME_LIGHT.equals(t)) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);

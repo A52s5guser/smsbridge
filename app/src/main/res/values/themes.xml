@@ -21,39 +21,39 @@
         <item name="android:colorControlHighlight">@color/ripple_color</item>
     </style>
 
-    <!-- Fixed grayscale theme, does not follow system dark mode -->
-    <style name="AppTheme.Mono" parent="Theme.Material3.Light.NoActionBar">
-        <item name="colorPrimary">#5C5C5C</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorPrimaryContainer">#E2E2E2</item>
-        <item name="colorOnPrimaryContainer">#1A1A1A</item>
-        <item name="colorSecondary">#5F5F5F</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="colorSecondaryContainer">#E5E5E5</item>
-        <item name="colorOnSecondaryContainer">#1A1A1A</item>
-        <item name="colorTertiary">#6E6E6E</item>
-        <item name="colorOnTertiary">#FFFFFF</item>
-        <item name="colorTertiaryContainer">#DADADA</item>
-        <item name="colorOnTertiaryContainer">#1A1A1A</item>
-        <item name="colorError">#4A4A4A</item>
-        <item name="colorOnError">#FFFFFF</item>
-        <item name="colorErrorContainer">#CFCFCF</item>
-        <item name="colorOnErrorContainer">#1A1A1A</item>
-        <item name="colorSurface">#FAFAFA</item>
-        <item name="colorOnSurface">#1A1A1A</item>
-        <item name="colorOnSurfaceVariant">#4A4A4A</item>
-        <item name="colorSurfaceContainerLowest">#FFFFFF</item>
-        <item name="colorSurfaceContainerLow">#F2F2F2</item>
-        <item name="colorSurfaceContainer">#EBEBEB</item>
-        <item name="colorSurfaceContainerHigh">#E2E2E2</item>
-        <item name="colorSurfaceContainerHighest">#D6D6D6</item>
-        <item name="colorOutline">#757575</item>
-        <item name="colorOutlineVariant">#C6C6C6</item>
-        <item name="android:windowBackground">#FAFAFA</item>
+    <!-- AMOLED monochrome: pure black surfaces, white elements, no color -->
+    <style name="AppTheme.Mono" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorPrimaryContainer">#262626</item>
+        <item name="colorOnPrimaryContainer">#FFFFFF</item>
+        <item name="colorSecondary">#BDBDBD</item>
+        <item name="colorOnSecondary">#000000</item>
+        <item name="colorSecondaryContainer">#1F1F1F</item>
+        <item name="colorOnSecondaryContainer">#FFFFFF</item>
+        <item name="colorTertiary">#9E9E9E</item>
+        <item name="colorOnTertiary">#000000</item>
+        <item name="colorTertiaryContainer">#242424</item>
+        <item name="colorOnTertiaryContainer">#FFFFFF</item>
+        <item name="colorError">#E0E0E0</item>
+        <item name="colorOnError">#000000</item>
+        <item name="colorErrorContainer">#2A2A2A</item>
+        <item name="colorOnErrorContainer">#FFFFFF</item>
+        <item name="colorSurface">#000000</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="colorOnSurfaceVariant">#B3B3B3</item>
+        <item name="colorSurfaceContainerLowest">#000000</item>
+        <item name="colorSurfaceContainerLow">#0A0A0A</item>
+        <item name="colorSurfaceContainer">#111111</item>
+        <item name="colorSurfaceContainerHigh">#1A1A1A</item>
+        <item name="colorSurfaceContainerHighest">#242424</item>
+        <item name="colorOutline">#8A8A8A</item>
+        <item name="colorOutlineVariant">#2E2E2E</item>
+        <item name="android:windowBackground">#000000</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>

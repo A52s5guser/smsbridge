@@ -28,14 +28,20 @@ public final class OutboxStore {
         public final boolean ok;
         public final String err;
         public final String status;
+        public final String msgId;
 
         public Sent(String to, String body, long ts, boolean ok, String err, String status) {
+            this(to, body, ts, ok, err, status, "");
+        }
+
+        public Sent(String to, String body, long ts, boolean ok, String err, String status, String msgId) {
             this.to = to == null ? "" : to;
             this.body = body == null ? "" : body;
             this.ts = ts;
             this.ok = ok;
             this.err = err == null ? "" : err;
             this.status = status == null ? "" : status;
+            this.msgId = msgId == null ? "" : msgId;
         }
     }
 
@@ -57,12 +63,31 @@ public final class OutboxStore {
 
     /** Adds a pending (queued) sent message; status tracks delivery afterwards. */
     public synchronized void add(String to, String body, String status) {
-        items.add(new Sent(to, body, System.currentTimeMillis(), false, "", status));
+        add(to, body, status, "");
+    }
+
+    public synchronized void add(String to, String body, String status, String msgId) {
+        items.add(new Sent(to, body, System.currentTimeMillis(), false, "", status, msgId));
         persist();
     }
 
     public synchronized void addStatus(String to, String body, long ts, boolean ok, String err) {
-        items.add(new Sent(to, body, ts, ok, err, ok ? "sent" : ("failed: " + err)));
+        addStatus(to, body, ts, ok, err, "");
+    }
+
+    public synchronized void addStatus(String to, String body, long ts, boolean ok, String err, String msgId) {
+        // Replace the queued entry instead of doubling it. Match by msgId,
+        // falling back to same recipient and body for older entries.
+        for (int i = items.size() - 1; i >= 0; i--) {
+            Sent s = items.get(i);
+            if (s.ok) continue;
+            if (!msgId.isEmpty() && !s.msgId.isEmpty()) {
+                if (msgId.equals(s.msgId)) items.remove(i);
+            } else if (s.to.equals(to) && s.body.equals(body)) {
+                items.remove(i);
+            }
+        }
+        items.add(new Sent(to, body, ts, ok, err, ok ? "sent" : ("failed: " + err), msgId));
         persist();
     }
 
@@ -92,7 +117,8 @@ public final class OutboxStore {
                         o.optLong("ts", 0L),
                         o.optBoolean("ok", false),
                         o.optString("err", ""),
-                        o.optString("status", "")));
+                        o.optString("status", ""),
+                        o.optString("msgId", "")));
             }
         } catch (Exception ignored) {
         }
@@ -109,6 +135,7 @@ public final class OutboxStore {
                 o.put("ok", s.ok);
                 o.put("err", s.err);
                 o.put("status", s.status);
+                o.put("msgId", s.msgId);
                 arr.put(o);
             }
             FileOutputStream fos = new FileOutputStream(file);

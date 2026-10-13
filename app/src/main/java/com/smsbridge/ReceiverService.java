@@ -92,9 +92,10 @@ public class ReceiverService extends Service {
             boolean ok = frame.optBoolean(Protocol.FIELD_OK, false);
             String err = frame.optString(Protocol.FIELD_ERR, "");
             long ts = frame.optLong(Protocol.FIELD_TS, System.currentTimeMillis());
+            String msgId = frame.optString(Protocol.FIELD_MSG_ID, "");
             Log.d(TAG, "sms status to=" + to + " ok=" + ok + " err=" + err);
 
-            OutboxStore.get(this).addStatus(to, body, ts, ok, err);
+            OutboxStore.get(this).addStatus(to, body, ts, ok, err, msgId);
             NotificationHelper.smsStatus(this, to, ok, err);
 
             Intent i = new Intent(Bus.ACTION_SMS_STATUS)
