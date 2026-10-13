@@ -1,6 +1,7 @@
 package com.smsbridge;
 
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -52,7 +53,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private static final int REQ_PERMS = 1;
     private static final int REQ_DIALER_ROLE = 2;
 
@@ -117,6 +118,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        applySavedTheme();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final View content = findViewById(R.id.root);
@@ -135,8 +137,39 @@ public class MainActivity extends Activity {
 
         roleGroup = findViewById(R.id.roleGroup);
         tabGroup = findViewById(R.id.tabGroup);
+        com.google.android.material.chip.ChipGroup themeChips = findViewById(R.id.themeChips);
+        if (themeChips != null) {
+            String cur = Prefs.get(this).getTheme();
+            int checked = R.id.themeSystem;
+            if (Prefs.THEME_LIGHT.equals(cur)) checked = R.id.themeLight;
+            else if (Prefs.THEME_DARK.equals(cur)) checked = R.id.themeDark;
+            else if (Prefs.THEME_MONO.equals(cur)) checked = R.id.themeMono;
+            themeChips.check(checked);
+            themeChips.setOnCheckedStateChangeListener(
+                    new com.google.android.material.chip.ChipGroup.OnCheckedStateChangeListener() {
+                @Override
+                public void onCheckedChanged(com.google.android.material.chip.ChipGroup group,
+                                             java.util.List<Integer> checkedIds) {
+                    if (checkedIds == null || checkedIds.isEmpty()) return;
+                    int sel = checkedIds.get(0);
+                    String picked = Prefs.THEME_SYSTEM;
+                    if (sel == R.id.themeLight) picked = Prefs.THEME_LIGHT;
+                    else if (sel == R.id.themeDark) picked = Prefs.THEME_DARK;
+                    else if (sel == R.id.themeMono) picked = Prefs.THEME_MONO;
+                    if (!picked.equals(Prefs.get(MainActivity.this).getTheme())) {
+                        Prefs.get(MainActivity.this).setTheme(picked);
+                        View chip = group.findViewById(sel);
+                        tap(chip != null ? chip : group);
+                        recreate();
+                    }
+                }
+            });
+        }
         peerDropdown = findViewById(R.id.peerDropdown);
         if (peerDropdown != null) {
+            peerDropdown.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) { peerDropdown.showDropDown(); }
+            });
             peerDropdown.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -421,7 +454,7 @@ public class MainActivity extends Activity {
                 0, title.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ss.setSpan(new android.text.style.AbsoluteSizeSpan(15, true),
                 0, title.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ss.setSpan(new android.text.style.ForegroundColorSpan(getColorRobust(R.color.text_secondary)),
+        ss.setSpan(new android.text.style.ForegroundColorSpan(getThemeColor(R.attr.colorOnSurfaceVariant)),
                 title.length() + 1, ss.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ss.setSpan(new android.text.style.AbsoluteSizeSpan(12, true),
                 title.length() + 1, ss.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -1087,10 +1120,10 @@ public class MainActivity extends Activity {
         // filtered
         List<ContactsStore.Contact> contacts = ContactsStore.get(this).getAll();
         List<UiRow> rows=new ArrayList<>();
-        UiRow sync = new UiRow(KIND_SYNC, R.drawable.ic_send, getColorRobust(R.color.primary), getString(R.string.contacts_sync), contacts.isEmpty()?getString(R.string.contacts_empty):getString(R.string.contacts_count, contacts.size()));
+        UiRow sync = new UiRow(KIND_SYNC, R.drawable.ic_send, getThemeColor(R.attr.colorPrimary), getString(R.string.contacts_sync), contacts.isEmpty()?getString(R.string.contacts_empty):getString(R.string.contacts_count, contacts.size()));
         rows.add(sync);
         for (ContactsStore.Contact c : contacts) {
-            UiRow row = new UiRow(R.drawable.ic_contacts, getColorRobust(R.color.row_tint), c.name.isEmpty()?c.number:c.name, c.number, "");
+            UiRow row = new UiRow(R.drawable.ic_contacts, getThemeColor(R.attr.colorPrimary), c.name.isEmpty()?c.number:c.name, c.number, "");
             row.number=c.number; row.name=c.name; rows.add(row);
         }
         rows=filterRows(rows);
@@ -1099,7 +1132,7 @@ public class MainActivity extends Activity {
 
     private void addRows(RowListAdapter out, List<UiRow> rows, String key) {
         if (rows.isEmpty()) {
-            out.add(new UiRow(R.drawable.ic_notif_sms, getColorRobust(R.color.text_secondary),
+            out.add(new UiRow(R.drawable.ic_notif_sms, getThemeColor(R.attr.colorOnSurfaceVariant),
                     "Nothing here yet", "", ""));
             return;
         }
@@ -1119,7 +1152,7 @@ public class MainActivity extends Activity {
             String[] lines = e.text.split("\n");
             out.add(new UiRow(
                     R.drawable.ic_notif_sms,
-                    getColorRobust(e.ok ? R.color.accent : R.color.err),
+                    (e.ok ? getThemeColor(R.attr.colorPrimary) : getThemeColor(R.attr.colorError)),
                     lines[0],
                     lines.length > 1 ? lines[1] : "",
                     fmt.format(new Date(e.ts))));
@@ -1175,7 +1208,7 @@ public class MainActivity extends Activity {
             boolean o = out.get(num);
             String sub = (o ? "You: " : "In: ") + last.get(num);
             UiRow row = new UiRow(o ? R.drawable.ic_send : R.drawable.ic_notif_sms,
-                    getColorRobust(o ? R.color.accent : R.color.row_tint),
+                    (o ? getThemeColor(R.attr.colorPrimary) : getThemeColor(R.attr.colorPrimary)),
                     shown, sub, fmt.format(new Date(ts.get(num))));
             row.number = num;
             row.name = name;
@@ -1191,14 +1224,14 @@ public class MainActivity extends Activity {
         for (MessagesStore.Received m : MessagesStore.get(this).getAll()) {
             if (!cleanNum(m.from).equals(key)) continue;
             merged.add(new Object[]{m.ts, new UiRow(R.drawable.ic_notif_sms,
-                    getColorRobust(R.color.row_tint),
+                    getThemeColor(R.attr.colorPrimary),
                     name.isEmpty() ? m.from : name, m.body, fmt.format(new Date(m.ts)), m, null)});
         }
         for (OutboxStore.Sent s : OutboxStore.get(this).getAll()) {
             if (!cleanNum(s.to).equals(key)) continue;
             String status = s.ok ? "sent" : (s.status == null || s.status.isEmpty() ? "queued" : s.status);
             merged.add(new Object[]{s.ts, new UiRow(R.drawable.ic_send,
-                    getColorRobust(s.ok ? R.color.accent : R.color.err),
+                    (s.ok ? getThemeColor(R.attr.colorPrimary) : getThemeColor(R.attr.colorError)),
                     "You", s.body + "\n  \u2022 " + status, fmt.format(new Date(s.ts)), null, s)});
         }
         return sortedRowsAsc(merged);
@@ -1239,27 +1272,27 @@ public class MainActivity extends Activity {
             String title;
             switch (c.event) {
                 case Protocol.EV_RINGING:
-                    color = getColorRobust(R.color.call_in);
+                    color = getThemeColor(R.attr.colorTertiary);
                     title = "Incoming call";
                     break;
                 case Protocol.EV_DIALING:
-                    color = getColorRobust(R.color.call_out);
+                    color = getThemeColor(R.attr.colorPrimary);
                     title = "Outgoing call";
                     break;
                 case Protocol.EV_MISSED:
-                    color = getColorRobust(R.color.call_missed);
+                    color = getThemeColor(R.attr.colorError);
                     title = "Missed call";
                     break;
                 case Protocol.EV_ANSWERED:
-                    color = getColorRobust(R.color.accent);
+                    color = getThemeColor(R.attr.colorPrimary);
                     title = "Answered";
                     break;
                 case Protocol.EV_ENDED:
-                    color = getColorRobust(R.color.call_ended);
+                    color = getThemeColor(R.attr.colorOutline);
                     title = "Call ended";
                     break;
                 default:
-                    color = getColorRobust(R.color.text_secondary);
+                    color = getThemeColor(R.attr.colorOnSurfaceVariant);
                     title = c.event;
             }
             String who = (c.name != null && !c.name.isEmpty())
@@ -1335,14 +1368,14 @@ public class MainActivity extends Activity {
     private void buildContacts(RowListAdapter out) {
         List<ContactsStore.Contact> contacts = ContactsStore.get(this).getAll();
         UiRow sync = new UiRow(KIND_SYNC, R.drawable.ic_send,
-                getColorRobust(R.color.primary),
+                getThemeColor(R.attr.colorPrimary),
                 getString(R.string.contacts_sync), contacts.isEmpty()
                         ? getString(R.string.contacts_empty)
                         : getString(R.string.contacts_count, contacts.size()));
         out.add(sync);
         for (ContactsStore.Contact c : contacts) {
             UiRow row = new UiRow(R.drawable.ic_contacts,
-                    getColorRobust(R.color.row_tint), c.name.isEmpty() ? c.number : c.name,
+                    getThemeColor(R.attr.colorPrimary), c.name.isEmpty() ? c.number : c.name,
                     c.number, "");
             row.number = c.number;
             row.name = c.name;
@@ -1378,14 +1411,45 @@ public class MainActivity extends Activity {
             0xFF9AB8D3, 0xFFD8B4FE, 0xFFA9DEF9, 0xFFFFC6FF
         };
         int h=Math.abs(key.hashCode());
-        return palette[h % palette.length];
+        int c = palette[h % palette.length];
+        if (Prefs.get(this).isMono()) {
+            int gray = (int)(0.299 * ((c >> 16) & 0xFF) + 0.587 * ((c >> 8) & 0xFF) + 0.114 * (c & 0xFF));
+            if (gray < 70) gray = 70;
+            if (gray > 200) gray = 200;
+            return 0xFF000000 | (gray << 16) | (gray << 8) | gray;
+        }
+        return c;
+    }
+
+    private void applySavedTheme() {
+        String t = Prefs.get(this).getTheme();
+        if (Prefs.THEME_MONO.equals(t)) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            setTheme(R.style.AppTheme_Mono);
+        } else if (Prefs.THEME_LIGHT.equals(t)) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        } else if (Prefs.THEME_DARK.equals(t)) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        }
+    }
+
+    private int getThemeColor(int attr) {
+        android.util.TypedValue tv = new android.util.TypedValue();
+        try {
+            getTheme().resolveAttribute(attr, tv, true);
+            return tv.data;
+        } catch (Throwable t) {
+            return 0xFF6750A4;
+        }
     }
 
     private int getColorRobust(int res) {
         try {
             return getColor(res);
         } catch (Throwable t) {
-            return 0xFF1677FF;
+            return 0xFF6750A4;
         }
     }
 
@@ -1509,7 +1573,7 @@ public class MainActivity extends Activity {
             if(icon!=null){
                 icon.setImageResource(row.icon);
                 icon.setColorFilter(row.color, PorterDuff.Mode.SRC_IN);
-                if (row.kind != 0) icon.setColorFilter(act.getColorRobust(R.color.primary), PorterDuff.Mode.SRC_IN);
+                if (row.kind != 0) icon.setColorFilter(act.getThemeColor(R.attr.colorPrimary), PorterDuff.Mode.SRC_IN);
             }
             TextView title = v.findViewById(R.id.rowTitle);
             TextView sub = v.findViewById(R.id.rowSub);
@@ -1518,16 +1582,16 @@ public class MainActivity extends Activity {
                 int extra = 0;
                 try { extra = Integer.parseInt(row.title); } catch (Exception ignored) {}
                 title.setText(extra > 0 ? act.getString(R.string.see_more_n, extra) : act.getString(R.string.see_more));
-                title.setTextColor(act.getColorRobust(R.color.primary));
+                title.setTextColor(act.getThemeColor(R.attr.colorPrimary));
                 sub.setText(""); time.setText("");
                 if(avatarWrap!=null) avatarWrap.setVisibility(View.GONE);
-                if(icon!=null){ icon.setVisibility(View.VISIBLE); icon.setColorFilter(act.getColorRobust(R.color.primary), PorterDuff.Mode.SRC_IN); }
+                if(icon!=null){ icon.setVisibility(View.VISIBLE); icon.setColorFilter(act.getThemeColor(R.attr.colorPrimary), PorterDuff.Mode.SRC_IN); }
             } else {
                 if (row.title == null || row.title.isEmpty()) title.setText(act.getString(R.string.see_more));
                 else title.setText(row.title);
-                title.setTextColor(act.getColorRobust(R.color.text_primary));
+                title.setTextColor(act.getThemeColor(R.attr.colorOnSurface));
                 sub.setText(row.subtitle);
-                sub.setTextColor(act.getColorRobust(R.color.text_secondary));
+                sub.setTextColor(act.getThemeColor(R.attr.colorOnSurfaceVariant));
                 time.setText(row.time);
             }
             return v;

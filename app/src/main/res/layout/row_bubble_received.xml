@@ -21,7 +21,7 @@
             android:id="@+id/bubbleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/bubble_received_text"
+            android:textColor="?attr/colorOnSecondaryContainer"
             android:textSize="15sp"
             android:lineSpacingExtra="1dp" />
 
@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="@color/bubble_time_received"
+            android:textColor="?attr/colorOnSecondaryContainer"
             android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>

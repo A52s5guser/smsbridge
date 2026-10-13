@@ -20,4 +20,45 @@
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:colorControlHighlight">@color/ripple_color</item>
     </style>
+
+    <!-- Fixed grayscale theme, does not follow system dark mode -->
+    <style name="AppTheme.Mono" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#5C5C5C</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#E2E2E2</item>
+        <item name="colorOnPrimaryContainer">#1A1A1A</item>
+        <item name="colorSecondary">#5F5F5F</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">#E5E5E5</item>
+        <item name="colorOnSecondaryContainer">#1A1A1A</item>
+        <item name="colorTertiary">#6E6E6E</item>
+        <item name="colorOnTertiary">#FFFFFF</item>
+        <item name="colorTertiaryContainer">#DADADA</item>
+        <item name="colorOnTertiaryContainer">#1A1A1A</item>
+        <item name="colorError">#4A4A4A</item>
+        <item name="colorOnError">#FFFFFF</item>
+        <item name="colorErrorContainer">#CFCFCF</item>
+        <item name="colorOnErrorContainer">#1A1A1A</item>
+        <item name="colorSurface">#FAFAFA</item>
+        <item name="colorOnSurface">#1A1A1A</item>
+        <item name="colorOnSurfaceVariant">#4A4A4A</item>
+        <item name="colorSurfaceContainerLowest">#FFFFFF</item>
+        <item name="colorSurfaceContainerLow">#F2F2F2</item>
+        <item name="colorSurfaceContainer">#EBEBEB</item>
+        <item name="colorSurfaceContainerHigh">#E2E2E2</item>
+        <item name="colorSurfaceContainerHighest">#D6D6D6</item>
+        <item name="colorOutline">#757575</item>
+        <item name="colorOutlineVariant">#C6C6C6</item>
+        <item name="android:windowBackground">#FAFAFA</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+        <item name="android:windowBackgroundBlurRadius">24dp</item>
+        <item name="android:windowBlurBehindRadius">24dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
 </resources>

@@ -4,17 +4,17 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
+    android:background="?attr/colorSurface"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/headerBar"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="@color/bg"
+        android:background="?attr/colorSurface"
         app:menu="@menu/toolbar_menu"
         app:title="Messages"
-        app:titleTextColor="@color/text_primary" />
+        app:titleTextColor="?attr/colorOnSurface" />
 
     <TextView
         android:id="@+id/headerSubtitle"
@@ -24,7 +24,7 @@
         android:layout_marginRight="16dp"
         android:layout_marginBottom="8dp"
         android:text="@string/header_sender"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="12sp" />
 
     <LinearLayout
@@ -45,7 +45,7 @@
             android:layout_height="24dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_search"
-            android:tint="@color/search_icon" />
+            android:tint="?attr/colorOnSurfaceVariant" />
 
         <EditText
             android:id="@+id/searchInput"
@@ -58,8 +58,8 @@
             android:inputType="text"
             android:maxLines="1"
             android:singleLine="true"
-            android:textColor="@color/text_primary"
-            android:textColorHint="@color/search_hint"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="16sp" />
 
         <ImageButton
@@ -69,7 +69,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Clear search"
             android:src="@drawable/ic_close"
-            android:tint="@color/text_secondary"
+            android:tint="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
     </LinearLayout>
 
@@ -149,7 +149,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Back"
                     android:src="@drawable/ic_back"
-                    android:tint="@color/text_primary" />
+                    android:tint="?attr/colorOnSurface" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -163,7 +163,7 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:textColor="@color/text_primary"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -173,7 +173,7 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="12sp" />
                 </LinearLayout>
 
@@ -224,7 +224,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:text="CONNECTION"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.06" />
@@ -288,7 +288,7 @@
                         android:layout_marginTop="16dp"
                         android:layout_marginBottom="4dp"
                         android:text="Paired phone"
-                        android:textColor="@color/text_primary"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -297,7 +297,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:text="Pick the other phone. Pair it first in Bluetooth settings."
-                        android:textColor="@color/text_secondary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="13sp" />
 
                     <LinearLayout
@@ -318,7 +318,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="none"
-                                android:textColor="@color/text_primary" />
+                                android:textColor="?attr/colorOnSurface" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <com.google.android.material.button.MaterialButton
@@ -340,7 +340,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:text="@string/status"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="13sp" />
 
                     <LinearLayout
@@ -381,8 +381,65 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
                     android:layout_marginBottom="8dp"
+                    android:text="APPEARANCE"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.06" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/m3_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/themeChips"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:chipSpacingHorizontal="8dp"
+                        app:chipSpacingVertical="8dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/themeSystem"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="System" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/themeLight"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Light" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/themeDark"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Dark" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/themeMono"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mono" />
+                    </com.google.android.material.chip.ChipGroup>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="8dp"
                     android:text="ABOUT"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.06" />
@@ -398,7 +455,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="SMSBridge - Messages over Bluetooth"
-                        android:textColor="@color/text_primary"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -407,7 +464,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Turn a spare phone into a second phone. No internet, no servers."
-                        android:textColor="@color/text_secondary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="14sp" />
 
                     <TextView
@@ -416,7 +473,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="1.0.0"
-                        android:textColor="@color/text_tertiary"
+                        android:textColor="?attr/colorOutline"
                         android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -444,8 +501,8 @@
             android:minHeight="48dp"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
-            android:textColor="@color/text_primary"
-            android:textColorHint="@color/search_hint"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="16sp" />
 
         <LinearLayout
@@ -466,8 +523,8 @@
                 android:maxLines="4"
                 android:minHeight="48dp"
                 android:padding="16dp"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/search_hint"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:textSize="16sp" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -502,8 +559,8 @@
             android:minHeight="48dp"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
-            android:textColor="@color/text_primary"
-            android:textColorHint="@color/search_hint"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOnSurfaceVariant"
             android:textSize="16sp" />
 
         <LinearLayout
@@ -538,8 +595,8 @@
                 android:layout_marginLeft="8dp"
                 android:layout_weight="1"
                 android:text="@string/call_reject"
-                android:textColor="@color/on_err"
-                app:backgroundTint="@color/err" />
+                android:textColor="?attr/colorOnError"
+                app:backgroundTint="?attr/colorError" />
         </LinearLayout>
     </LinearLayout>
 
@@ -547,7 +604,7 @@
         android:id="@+id/tabGroup"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:background="@color/surface_container"
+        android:background="?attr/colorSurfaceContainer"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/nav_tabs" />
 
