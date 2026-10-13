@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SMSBridge</string>
-    <string name="title">SMSBridge — forward SMS over Bluetooth</string>
-    <string name="header_sender">Sender — SIM bridge</string>
-    <string name="header_receiver">Receiver — your phone</string>
+    <string name="title">SMSBridge - forward SMS over Bluetooth</string>
+    <string name="header_sender">Sender - SIM bridge</string>
+    <string name="header_receiver">Receiver - your phone</string>
     <string name="role_prompt">This device role</string>
-    <string name="role_sender">Sender — holds the SIM, receives SMS and forwards them</string>
-    <string name="role_receiver">Receiver — shows forwarded SMS on this device</string>
+    <string name="role_sender">Sender - holds the SIM, receives SMS and forwards them</string>
+    <string name="role_receiver">Receiver - shows forwarded SMS on this device</string>
     <string name="role_sender_short">Sender (has SIM)</string>
     <string name="role_receiver_short">Receiver</string>
     <string name="peer_prompt">Peer device (pair it first in Bluetooth settings)</string>
@@ -16,7 +16,7 @@
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="status">Status: stopped</string>
-    <string name="status_sender">Sender ready — waiting for incoming SMS</string>
+    <string name="status_sender">Sender ready - waiting for incoming SMS</string>
     <string name="status_receiver">Receiver listening for Bluetooth SMS</string>
     <string name="simulate">Simulate SMS (debug)</string>
     <string name="simulate_short">Test</string>
@@ -31,7 +31,7 @@
     <string name="show_less">Show less</string>
     <string name="contacts_sync">Sync contacts</string>
     <string name="contacts_sync_hint">Tap to fetch contacts from the SIM device</string>
-    <string name="contacts_empty">No contacts yet — tap Sync contacts</string>
+    <string name="contacts_empty">No contacts yet - tap Sync contacts</string>
     <string name="contacts_count">%1$d contacts</string>
     <string name="act_call">Call</string>
     <string name="act_sms">Message</string>
@@ -52,7 +52,7 @@
     <string name="call_dialer_hint">Phone number</string>
     <string name="call_dial">Dial</string>
     <string name="call_answer">Answer</string>
-    <string name="call_reject">Reject/Hang up</string>
+    <string name="call_reject">Reject</string>
     <string name="call_set_dialer">Set as default dialer</string>
     <string name="call_dialer_ok">SMSBridge is the default dialer</string>
     <string name="call_dialer_needed">Set SMSBridge as the default dialer on the sender to control calls</string>

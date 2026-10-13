@@ -1,60 +1,40 @@
 # SMSBridge
 
-Turn a spare phone into a free second phone — send, receive, and answer SMS and calls on a SIM-less phone, fully offline over Bluetooth.
+I had a spare phone with no SIM and wanted it to work like a second phone. SMSBridge links two Android phones over Bluetooth so the one without a SIM can send and receive texts and calls through the one that has a SIM. No internet, no accounts, no servers.
 
-## What it does
+## How I use it
 
-SMSBridge links two Android phones with a direct Bluetooth connection and no internet:
+One phone holds the SIM (I call it the sender). The other phone has no SIM (the receiver). They talk to each other over Bluetooth.
 
-- **Sender** — the phone with the SIM card and cellular service
-- **Receiver** — any old phone with no SIM (this project was built around an S25 Plus + A52s)
+- Send texts from the SIM-less phone. They go out through the sender's SIM.
+- Incoming texts show up on both phones.
+- Incoming calls ring on both phones. You can answer or reject from either side.
+- Contacts sync from the sender so names show up properly.
 
-The receiver becomes a real messaging/calling device: it sends texts that go out on the sender's SIM, rings when someone calls the sender's number, and shows you every conversation.
+I built it around a Galaxy S25 Plus (no SIM) and a Galaxy A52s (has the SIM).
 
-## Features
+## Getting it running
 
-- **Offline-only** — no servers, no accounts, no internet; works via a Bluetooth Classic RFCOMM link
-- **Compose & send SMS from the SIM-less phone** — messages are forwarded to the sender and sent through its SIM, with delivery-status tracking
-- **Receive SMS** — incoming texts ring/notify on the receiver and appear in per-person chats
-- **Contacts sync** — the sender's contact book is mirrored over the link in real time
-- **Call mirroring & control** — incoming calls ring on the receiver (sound mode = rings, vibrate mode = vibrates, silent = quiet); answer or reject remotely from the receiver
-- **Per-person conversations** — Chats, Contacts, and Calls tabs backed by local stores, with thread view, history, and one-tap call
-- **Pure background receiver** — the receiver can run silently in the background with no persistent notification
-- **Liquid-glass UI** — day/night theming, translucent glass panels, no app dependencies
+You need both phones paired over Bluetooth first. Do that in the system Bluetooth settings.
 
-## How it works
+1. Install the APK on both phones (see Releases).
+2. Open the app on both and allow the permissions it asks for.
+3. On each phone, go to Settings in the app. Pick this phone's role: Sender if it has the SIM, Receiver if it doesn't.
+4. Still in Settings, tap your other phone under Paired phone, then hit Start on both phones.
 
-```
-Sender (has SIM) ──< Bluetooth Classic RFCOMM >── Receiver (no SIM)
-     │      │     JSON frames over SPP            │
-   calls   SMS            ▲                                 
-     │       │            │
-   CallMonitor       IncomingSMS/reply → sent on sender's SIM
-   (rings ↔ receiver)
-```
+The sender needs to stay within Bluetooth range of the receiver. That is the whole trick and also the main limitation.
 
-Both devices run a JSON-frame protocol (`Protocol.java`) over a pairing-less RFCOMM socket (`BtController`). The sender monitors its cellular events with `CallMonitor` and forwards them as frames; the receiver acts on them (`CallRinger`, notifications, stores). Calls are answered/rejected from the receiver by sending the matching command back over the link.
+## Notes
 
-## Build
+- The receiver runs without a persistent notification. If you swipe the app away from recents it stops, so leave it running.
+- Message history and contacts are stored on each device only. Nothing leaves the phones except over your own Bluetooth link.
+- Built with plain Android Views and Material 3 components. Min SDK 33.
+
+## Build it yourself
 
 ```bash
 ./gradlew :app:assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk   # on both phones
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Requires Android Studio / SDK 36 (compileSdk), minSdk 33.
-
-## Setup
-
-1. Install SMSBridge on both phones.
-2. Grant the requested permissions on both devices.
-3. On the sender, pair it as the default dialer if you want call control.
-4. Pick the other phone in the peer spinner and tap **START** on each side.
-
-## Permissions used
-
-`RECEIVE_SMS` / `SEND_SMS` (forwarding), `BLUETOOTH_CONNECT` (the link), `READ_PHONE_STATE` / `READ_CALL_LOG` / `CALL_PHONE` (call events & control), `READ_CONTACTS` (contact sync), `RECORD_AUDIO` (ring + call audio). The bootloader-locked / sim-locked hardware notes are in the code repository history only — no secrets or identifiers ship in the app.
-
-## Reference material
-
-`references/` contains public Android sample code (Bluetooth Chat, SMS receiver) used for initial wire-protocol research. Google sample code is Apache 2.0.
+Needs the Android SDK with compileSdk 36. The Material library pulls in from Google Maven on first build.

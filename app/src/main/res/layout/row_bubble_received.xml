@@ -4,8 +4,7 @@
     android:layout_height="wrap_content"
     android:gravity="start"
     android:orientation="horizontal"
-    android:paddingLeft="0dp"
-    android:paddingRight="48dp"
+    android:paddingRight="56dp"
     android:paddingTop="2dp"
     android:paddingBottom="2dp">
 
@@ -13,8 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start"
-        android:background="@drawable/bg_bubble_received"
-        android:elevation="1dp"
+        android:background="@drawable/m3_bubble_received"
         android:maxWidth="280dp"
         android:orientation="vertical"
         android:padding="12dp">
@@ -33,6 +31,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textColor="@color/bubble_time_received"
-            android:textSize="10sp" />
+            android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>

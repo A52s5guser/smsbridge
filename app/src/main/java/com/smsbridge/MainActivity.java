@@ -1,7 +1,6 @@
 package com.smsbridge;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -10,10 +9,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Insets;
 import android.graphics.PorterDuff;
-import android.graphics.RenderEffect;
-import android.graphics.Shader;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,9 +35,12 @@ import android.widget.ListView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.navigation.NavigationBarView;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -63,8 +65,10 @@ public class MainActivity extends Activity {
     private static final String KEY_CALL = "call";
 
     private RadioGroup roleGroup;
-    private RadioGroup tabGroup;
-    private Spinner peerSpinner;
+    private NavigationBarView tabGroup;
+    private ListView peerList;
+    private TextView peerEmpty;
+    private PeerAdapter peerListAdapter;
     private TextView statusText;
     private TextView headerSubtitle;
     private ListView chatList;
@@ -74,7 +78,7 @@ public class MainActivity extends Activity {
     private ListView threadList;
     private TextView threadTitle;
     private TextView threadSub;
-    private Button threadBack;
+    private View threadBack;
     private Button threadCall;
     private View composerPanel;
     private View dialPad;
@@ -82,14 +86,10 @@ public class MainActivity extends Activity {
     private Button dialButton;
     private Button answerButton;
     private Button rejectButton;
-    private Button dialerButton;
     private EditText callNumber;
     private EditText smsToNumber;
     private EditText smsBody;
-    private Button smsSend;
-    // Liquid Glass + 4-tab
-    private View headerGlass;
-    private View bottomTabBar;
+    private View smsSend;
     private View settingsPanel;
     private View callsPage;
     private EditText searchInput;
@@ -137,7 +137,23 @@ public class MainActivity extends Activity {
 
         roleGroup = findViewById(R.id.roleGroup);
         tabGroup = findViewById(R.id.tabGroup);
-        peerSpinner = findViewById(R.id.peerSpinner);
+        peerList = findViewById(R.id.peerList);
+        peerEmpty = findViewById(R.id.peerEmpty);
+        if (peerList != null) {
+            peerListAdapter = new PeerAdapter(this);
+            peerList.setAdapter(peerListAdapter);
+            peerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    if (position < 0 || position >= peers.size()) return;
+                    BluetoothDevice dev = peers.get(position);
+                    Prefs.get(MainActivity.this).setPeer(dev.getAddress(), dev.getName());
+                    tap(view);
+                    peerListAdapter.notifyDataSetChanged();
+                    refreshAll();
+                }
+            });
+        }
         statusText = findViewById(R.id.statusText);
         headerSubtitle = findViewById(R.id.headerSubtitle);
         chatList = findViewById(R.id.chatList);
@@ -156,23 +172,27 @@ public class MainActivity extends Activity {
         dialButton = findViewById(R.id.callDialButton);
         answerButton = findViewById(R.id.callAnswerButton);
         rejectButton = findViewById(R.id.callRejectButton);
-        dialerButton = findViewById(R.id.callDialerButton);
         smsToNumber = findViewById(R.id.smsToNumber);
         smsBody = findViewById(R.id.smsBody);
         smsSend = findViewById(R.id.smsSend);
         Button startButton = findViewById(R.id.startButton);
         Button stopButton = findViewById(R.id.stopButton);
         Button refreshButton = findViewById(R.id.refreshButton);
-        headerGlass = findViewById(R.id.headerGlass);
-        bottomTabBar = findViewById(R.id.bottomTabBar);
         settingsPanel = findViewById(R.id.settingsPanel);
         callsPage = findViewById(R.id.callsPage);
         searchInput = findViewById(R.id.searchInput);
         searchPill = findViewById(R.id.searchPill);
-        View settingsGear = findViewById(R.id.settingsGear);
-        if (settingsGear != null) {
-            settingsGear.setOnClickListener(new View.OnClickListener() {
-                @Override public void onClick(View v) { tactile(v); ((RadioButton)findViewById(R.id.tabSettings)).setChecked(true); }
+        com.google.android.material.appbar.MaterialToolbar headerBar = findViewById(R.id.headerBar);
+        if (headerBar != null) {
+            headerBar.setOnMenuItemClickListener(new androidx.appcompat.widget.Toolbar.OnMenuItemClickListener() {
+                @Override public boolean onMenuItemClick(android.view.MenuItem item) {
+                    if (item.getItemId() == R.id.actionSettings) {
+                        tap(headerBar);
+                        tabGroup.setSelectedItemId(R.id.tabSettings);
+                        return true;
+                    }
+                    return false;
+                }
             });
         }
         // search
@@ -183,12 +203,8 @@ public class MainActivity extends Activity {
                 @Override public void afterTextChanged(Editable s){ searchQuery = s.toString().trim().toLowerCase(Locale.US); rebuildLists(); }
             });
             View clear = findViewById(R.id.searchClear);
-            if (clear != null) clear.setOnClickListener(new View.OnClickListener(){@Override public void onClick(View v){ searchInput.setText(""); tactile(v);} });
+            if (clear != null) clear.setOnClickListener(new View.OnClickListener(){@Override public void onClick(View v){ searchInput.setText(""); tap(v);} });
         }
-        // tactile for primary buttons
-        int[] tactileIds = new int[]{R.id.startButton,R.id.stopButton,R.id.refreshButton,R.id.smsSend,R.id.callDialButton,R.id.callAnswerButton,R.id.callRejectButton,R.id.threadBack,R.id.threadCall};
-        for(int id: tactileIds){ View bv=findViewById(id); if(bv!=null) bv.setOnTouchListener(new View.OnTouchListener(){@Override public boolean onTouch(View v,android.view.MotionEvent e){ if(e.getAction()==android.view.MotionEvent.ACTION_DOWN) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); return false; }}); }
-        setupSquircles();
 
         chatAdapter = new RowListAdapter(this);
         callAdapter = new RowListAdapter(this);
@@ -205,12 +221,14 @@ public class MainActivity extends Activity {
         threadBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                tap(v);
                 exitThread();
             }
         });
         threadCall.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                confirm(v);
                 if (openThreadNumber != null) doCall(openThreadNumber);
             }
         });
@@ -219,40 +237,47 @@ public class MainActivity extends Activity {
         loadSavedState();
         setupRoleToggle();
         setupTabs();
+        tabGroup.setSelectedItemId(R.id.tabChat);
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                confirm(v);
                 onStartPressed();
             }
         });
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                tap(v);
                 stopServices();
             }
         });
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                tap(v);
                 refreshPeers();
             }
         });
         simulateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                tap(v);
                 simulateSms();
             }
         });
         dialButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                confirm(v);
                 dialRemote();
             }
         });
         answerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                confirm(v);
                 if (Prefs.get(MainActivity.this).isSender()) {
                     actLocal("answer", new Runnable() {
                         @Override
@@ -273,6 +298,7 @@ public class MainActivity extends Activity {
         rejectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                buzzReject(v);
                 if (Prefs.get(MainActivity.this).isSender()) {
                     actLocal("reject/hangup", new Runnable() {
                         @Override
@@ -290,15 +316,10 @@ public class MainActivity extends Activity {
                 }
             }
         });
-        dialerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                makeDefaultDialer();
-            }
-        });
         smsSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                confirm(v);
                 sendSms();
             }
         });
@@ -387,11 +408,30 @@ public class MainActivity extends Activity {
     // ------------------------------------------------------------------- wiring
 
     private void loadSavedState() {
+        RadioButton senderBtn = findViewById(R.id.roleSender);
+        RadioButton receiverBtn = findViewById(R.id.roleReceiver);
+        if (senderBtn != null) senderBtn.setText(roleLabel("Sender",
+                "Holds the SIM. Forwards texts and calls."));
+        if (receiverBtn != null) receiverBtn.setText(roleLabel("Receiver",
+                "No SIM needed. Shows messages here."));
         if (Prefs.get(this).isSender()) {
-            ((RadioButton) findViewById(R.id.roleSender)).setChecked(true);
+            senderBtn.setChecked(true);
         } else {
-            ((RadioButton) findViewById(R.id.roleReceiver)).setChecked(true);
+            receiverBtn.setChecked(true);
         }
+    }
+
+    private CharSequence roleLabel(String title, String desc) {
+        android.text.SpannableString ss = new android.text.SpannableString(title + "\n" + desc);
+        ss.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                0, title.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss.setSpan(new android.text.style.AbsoluteSizeSpan(15, true),
+                0, title.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss.setSpan(new android.text.style.ForegroundColorSpan(getColorRobust(R.color.text_secondary)),
+                title.length() + 1, ss.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss.setSpan(new android.text.style.AbsoluteSizeSpan(12, true),
+                title.length() + 1, ss.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return ss;
     }
 
     private void setupRoleToggle() {
@@ -399,6 +439,7 @@ public class MainActivity extends Activity {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 boolean sender = checkedId == R.id.roleSender;
+                tap(group.findViewById(checkedId));
                 Prefs.get(MainActivity.this).setRole(
                         sender ? Prefs.ROLE_SENDER : Prefs.ROLE_RECEIVER);
                 refreshAll();
@@ -406,26 +447,54 @@ public class MainActivity extends Activity {
         });
     }
 
+    static class PeerAdapter extends ArrayAdapter<BluetoothDevice> {
+        PeerAdapter(Context c) {
+            super(c, R.layout.peer_row);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = convertView;
+            if (v == null) {
+                v = android.view.LayoutInflater.from(getContext())
+                        .inflate(R.layout.peer_row, parent, false);
+            }
+            MainActivity act = (MainActivity) getContext();
+            BluetoothDevice dev = getItem(position);
+            TextView name = v.findViewById(R.id.peerName);
+            TextView mac = v.findViewById(R.id.peerMac);
+            RadioButton check = v.findViewById(R.id.peerCheck);
+            if (dev != null) {
+                String label = dev.getName();
+                name.setText(label == null || label.isEmpty() ? dev.getAddress() : label);
+                mac.setText(dev.getAddress());
+                String saved = Prefs.get(act).getPeerMac();
+                check.setChecked(saved != null && saved.equals(dev.getAddress()));
+            }
+            return v;
+        }
+    }
+
     private void setupTabs() {
-        tabGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        tabGroup.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (openThreadNumber != null && checkedId != R.id.tabChat) {
+            public boolean onNavigationItemSelected(android.view.MenuItem item) {
+                int id = item.getItemId();
+                if (openThreadNumber != null && id != R.id.tabChat) {
                     clearThreadUi();
                 }
-                View checked = group.findViewById(checkedId);
-                if(checked!=null) checked.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
-                // update G2 squircle for tabs
-                for(int id: new int[]{R.id.tabChat,R.id.tabContacts,R.id.tabCall,R.id.tabSettings}){
-                    View v=group.findViewById(id);
-                    if(v instanceof RadioButton){
-                        boolean isChecked = v.getId()==checkedId;
-                        int fill=isChecked? getColorRobust(R.color.tab_active) : 0x00000000;
-                        SquircleHelper.apply(v, fill, 18, 0, 0);
-                        ((RadioButton)v).setTextColor(isChecked? getColorRobust(R.color.tab_text_checked): getColorRobust(R.color.tab_text_unchecked));
-                    }
-                }
-                refreshAll();
+                tap(tabGroup);
+                // selection commits after this returns, so refresh on next loop
+                tabGroup.post(new Runnable() {
+                    @Override public void run() { refreshAll(); }
+                });
+                return true;
+            }
+        });
+        tabGroup.setOnItemReselectedListener(new NavigationBarView.OnItemReselectedListener() {
+            @Override
+            public void onNavigationItemReselected(android.view.MenuItem item) {
+                tap(tabGroup);
             }
         });
     }
@@ -438,7 +507,7 @@ public class MainActivity extends Activity {
                 float dx=e2.getX()-e1.getX();
                 float dy=Math.abs(e2.getY()-e1.getY());
                 if(dx>120 && Math.abs(vx)>400 && dy<200 && openThreadNumber!=null){
-                    tactile(threadPanel); exitThread(); return true;
+                    tap(threadPanel); exitThread(); return true;
                 }
                 return false;
             }
@@ -456,7 +525,7 @@ public class MainActivity extends Activity {
                     if(e.getAction()==MotionEvent.ACTION_DOWN) downX[0]=e.getX();
                     if(e.getAction()==MotionEvent.ACTION_UP){
                         float dx=e.getX()-downX[0];
-                        if(Math.abs(dx)>30 && openThreadNumber!=null){ tactile(v); exitThread(); return true; }
+                        if(Math.abs(dx)>30 && openThreadNumber!=null){ tap(v); exitThread(); return true; }
                     }
                     gd.onTouchEvent(e);
                     return false;
@@ -468,9 +537,10 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed(){
-        if(openThreadNumber!=null){ exitThread(); return; }
+        if(openThreadNumber!=null){ tap(threadPanel); exitThread(); return; }
         if(!onChatTab()){
-            ((RadioButton)findViewById(R.id.tabChat)).setChecked(true);
+            tap(tabGroup);
+            tabGroup.setSelectedItemId(R.id.tabChat);
             return;
         }
         long now=System.currentTimeMillis();
@@ -479,17 +549,17 @@ public class MainActivity extends Activity {
             return;
         }
         lastBackPress=now;
-        Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
+        Snackbar.make(findViewById(R.id.root), "Press back again to exit", Snackbar.LENGTH_SHORT).show();
     }
 
     private boolean onChatTab() {
-        return tabGroup.getCheckedRadioButtonId() == R.id.tabChat;
+        return tabGroup.getSelectedItemId() == R.id.tabChat;
     }
 
     private boolean onContactsTab() {
-        return tabGroup.getCheckedRadioButtonId() == R.id.tabContacts;
+        return tabGroup.getSelectedItemId() == R.id.tabContacts;
     }
-    private boolean onCallsTab(){ return tabGroup.getCheckedRadioButtonId()==R.id.tabCall; }
+    private boolean onCallsTab(){ return tabGroup.getSelectedItemId()==R.id.tabCall; }
 
     private void refreshAll() {
         boolean sender = Prefs.get(this).isSender();
@@ -497,7 +567,7 @@ public class MainActivity extends Activity {
         if(statusText!=null) statusText.setText(sender ? R.string.status_sender : R.string.status_receiver);
 
         // tabs always visible except in thread
-        if(bottomTabBar!=null) bottomTabBar.setVisibility(openThreadNumber!=null ? View.GONE : View.VISIBLE);
+        if(tabGroup!=null) tabGroup.setVisibility(openThreadNumber!=null ? View.GONE : View.VISIBLE);
         if(searchPill!=null) searchPill.setVisibility((openThreadNumber!=null || isSettingsTab()) ? View.GONE : View.VISIBLE);
         if(simulateButton!=null) simulateButton.setVisibility(sender ? View.VISIBLE : View.GONE);
 
@@ -544,16 +614,6 @@ public class MainActivity extends Activity {
             if(smsToNumber!=null) smsToNumber.setVisibility(chat ? View.VISIBLE : View.GONE);
         }
 
-        if (sender) {
-            if (CallApi.isDefaultDialer(this)) {
-                dialerButton.setText(R.string.call_dialer_ok);
-                dialerButton.setEnabled(false);
-            } else {
-                dialerButton.setText(R.string.call_set_dialer);
-                dialerButton.setEnabled(true);
-            }
-        }
-
         rebuildLists();
         // liquid slide for content switch
         View newVisible=null;
@@ -563,7 +623,7 @@ public class MainActivity extends Activity {
         else if(onContactsTab()) newVisible=contactList;
         else if(onCallsTab()) newVisible=callsPage!=null?callsPage:callList;
         if(!firstRefresh && newVisible!=null && newVisible.getVisibility()==View.VISIBLE){
-            int curTab = tabGroup!=null?tabGroup.getCheckedRadioButtonId():-1;
+            int curTab = tabGroup!=null?tabGroup.getSelectedItemId():-1;
             if(openThreadNumber!=null) curTab = -2; // thread is separate
             if(curTab != lastTabId){
                 float d=16*getResources().getDisplayMetrics().density;
@@ -573,7 +633,7 @@ public class MainActivity extends Activity {
             }
         } else if(firstRefresh){
             firstRefresh=false;
-            lastTabId = openThreadNumber!=null? -2 : (tabGroup!=null?tabGroup.getCheckedRadioButtonId():-1);
+            lastTabId = openThreadNumber!=null? -2 : (tabGroup!=null?tabGroup.getSelectedItemId():-1);
         }
     }
 
@@ -588,41 +648,30 @@ public class MainActivity extends Activity {
         if (adapter == null) return;
         Set<BluetoothDevice> bonded = adapter.getBondedDevices();
         peers.clear();
-        ArrayAdapter<String> peerAdapter =
-                (ArrayAdapter<String>) peerSpinner.getAdapter();
-        if (peerAdapter == null) {
-            peerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
-            peerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            peerSpinner.setAdapter(peerAdapter);
-        }
-        peerAdapter.clear();
         if (bonded != null) {
             peers.addAll(bonded);
-            for (BluetoothDevice d : peers) {
-                peerAdapter.add(BtController.deviceLabel(d));
-            }
         }
-        if (peers.isEmpty()) {
-            peerAdapter.add(getString(R.string.peer_none));
+        if (peerListAdapter != null) {
+            peerListAdapter.clear();
+            for (BluetoothDevice d : peers) peerListAdapter.add(d);
+            peerListAdapter.notifyDataSetChanged();
         }
-        peerAdapter.notifyDataSetChanged();
-
-        String savedMac = Prefs.get(this).getPeerMac();
-        if (savedMac != null) {
-            for (int i = 0; i < peers.size(); i++) {
-                if (peers.get(i).getAddress().equals(savedMac)) {
-                    peerSpinner.setSelection(i);
-                    return;
-                }
-            }
-        }
+        if (peerEmpty != null) peerEmpty.setVisibility(peers.isEmpty() ? View.VISIBLE : View.GONE);
+        if (peerList != null) peerList.setVisibility(peers.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     private void onStartPressed() {
         Prefs p = Prefs.get(this);
-        if (peers.size() > 0 && peerSpinner.getSelectedItemPosition() >= 0
-                && peerSpinner.getSelectedItemPosition() < peers.size()) {
-            BluetoothDevice dev = peers.get(peerSpinner.getSelectedItemPosition());
+        String savedMac = p.getPeerMac();
+        if (savedMac != null) {
+            for (BluetoothDevice dev : peers) {
+                if (dev.getAddress().equals(savedMac)) {
+                    p.setPeer(dev.getAddress(), dev.getName());
+                    break;
+                }
+            }
+        } else if (!peers.isEmpty()) {
+            BluetoothDevice dev = peers.get(0);
             p.setPeer(dev.getAddress(), dev.getName());
         }
 
@@ -807,7 +856,7 @@ public class MainActivity extends Activity {
                 if (row == null || row.kind != KIND_NORMAL
                         || row.number == null || row.number.isEmpty()) return false;
                 final String number = row.number;
-                new AlertDialog.Builder(MainActivity.this)
+                new MaterialAlertDialogBuilder(MainActivity.this)
                         .setTitle(row.title)
                         .setMessage("Delete this whole conversation?")
                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
@@ -832,7 +881,7 @@ public class MainActivity extends Activity {
                 final UiRow selected = row;
                 String label = row.rcv != null ? "From " + row.rcv.from : "To " + row.snt.to;
                 String body = row.rcv != null ? row.rcv.body : row.snt.body;
-                new AlertDialog.Builder(MainActivity.this)
+                new MaterialAlertDialogBuilder(MainActivity.this)
                         .setTitle(label)
                         .setMessage(body + "\n\nDelete this message from the queue?")
                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
@@ -861,6 +910,7 @@ public class MainActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 UiRow row = chatAdapter.getItem(position);
                 if (row == null) return;
+                tap(view);
                 if (row.kind == KIND_SEE_MORE) {
                     toggleExpanded(KEY_CHAT);
                     return;
@@ -873,6 +923,7 @@ public class MainActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 UiRow row = threadAdapter.getItem(position);
                 if (row == null) return;
+                tap(view);
                 if (row.kind == KIND_SEE_MORE) {
                     toggleExpanded(openThreadNumber);
                     return;
@@ -892,6 +943,7 @@ public class MainActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 UiRow row = callAdapter.getItem(position);
                 if (row == null) return;
+                tap(view);
                 if (row.kind == KIND_SEE_MORE) {
                     toggleExpanded(KEY_CALL);
                     return;
@@ -909,6 +961,7 @@ public class MainActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 UiRow row = contactAdapter.getItem(position);
                 if (row == null) return;
+                tap(view);
                 if (row.kind == KIND_SYNC) {
                     syncContacts();
                     return;
@@ -924,6 +977,7 @@ public class MainActivity extends Activity {
                 UiRow row = contactAdapter.getItem(position);
                 if (row == null || row.kind != KIND_NORMAL
                         || row.number == null || row.number.isEmpty()) return false;
+                tap(view);
                 showNumberActions(row.number, row.name);
                 return true;
             }
@@ -948,7 +1002,7 @@ public class MainActivity extends Activity {
 
     private void openCompose(String number, String body) {
         if (!Prefs.get(this).isSender()) {
-            ((RadioButton) findViewById(R.id.tabChat)).setChecked(true);
+            tabGroup.setSelectedItemId(R.id.tabChat);
         }
         smsToNumber.setText(number);
         if (body != null && !body.isEmpty()) {
@@ -960,7 +1014,7 @@ public class MainActivity extends Activity {
 
     private void showNumberActions(final String number, final String name) {
         final String title = (name != null && !name.isEmpty()) ? name + "  " + number : number;
-        AlertDialog.Builder b = new AlertDialog.Builder(MainActivity.this)
+        MaterialAlertDialogBuilder b = new MaterialAlertDialogBuilder(MainActivity.this)
                 .setTitle(title)
                 .setItems(new String[]{
                         getString(R.string.act_call),
@@ -1059,7 +1113,7 @@ public class MainActivity extends Activity {
         UiRow sync = new UiRow(KIND_SYNC, R.drawable.ic_send, getColorRobust(R.color.primary), getString(R.string.contacts_sync), contacts.isEmpty()?getString(R.string.contacts_empty):getString(R.string.contacts_count, contacts.size()));
         rows.add(sync);
         for (ContactsStore.Contact c : contacts) {
-            UiRow row = new UiRow(R.drawable.ic_launcher, getColorRobust(R.color.row_tint), c.name.isEmpty()?c.number:c.name, c.number, "");
+            UiRow row = new UiRow(R.drawable.ic_contacts, getColorRobust(R.color.row_tint), c.name.isEmpty()?c.number:c.name, c.number, "");
             row.number=c.number; row.name=c.name; rows.add(row);
         }
         rows=filterRows(rows);
@@ -1072,7 +1126,9 @@ public class MainActivity extends Activity {
                     "Nothing here yet", "", ""));
             return;
         }
-        if (KEY_CHAT.equals(key) || expanded.contains(key) || rows.size() <= SEE_MORE_LIMIT) {
+        // Chats list and open thread always show everything, no collapsing
+        if (KEY_CHAT.equals(key) || (openThreadNumber != null && openThreadNumber.equals(key))
+                || expanded.contains(key) || rows.size() <= SEE_MORE_LIMIT) {
             for (UiRow r : rows) out.add(r);
             return;
         }
@@ -1168,7 +1224,21 @@ public class MainActivity extends Activity {
                     getColorRobust(s.ok ? R.color.accent : R.color.err),
                     "You", s.body + "\n  \u2022 " + status, fmt.format(new Date(s.ts)), null, s)});
         }
-        return sortedRows(merged);
+        return sortedRowsAsc(merged);
+    }
+
+    private List<UiRow> sortedRowsAsc(List<Object[]> merged) {
+        Collections.sort(merged, new java.util.Comparator<Object[]>() {
+            @Override
+            public int compare(Object[] a, Object[] b) {
+                return Long.compare((Long) a[0], (Long) b[0]);
+            }
+        });
+        List<UiRow> out = new ArrayList<>();
+        for (Object[] row : merged) {
+            out.add((UiRow) row[1]);
+        }
+        return out;
     }
 
     private List<UiRow> sortedRows(List<Object[]> merged) {
@@ -1250,13 +1320,22 @@ public class MainActivity extends Activity {
         smsToNumber.setText(number);
         smsBody.setText("");
         refreshAll();
-        threadList.setSelection(0);
+        scrollThreadToLatest();
+    }
+
+    private void scrollThreadToLatest() {
+        if (threadList == null || threadAdapter == null) return;
+        final int last = threadAdapter.getCount() - 1;
+        if (last < 0) return;
+        threadList.post(new Runnable() {
+            @Override public void run() { threadList.setSelection(last); }
+        });
     }
 
     private void exitThread() {
         if (openThreadNumber == null) return;
         clearThreadUi();
-        ((RadioButton) findViewById(R.id.tabChat)).setChecked(true);
+        tabGroup.setSelectedItemId(R.id.tabChat);
         refreshAll();
     }
 
@@ -1285,7 +1364,7 @@ public class MainActivity extends Activity {
                         : getString(R.string.contacts_count, contacts.size()));
         out.add(sync);
         for (ContactsStore.Contact c : contacts) {
-            UiRow row = new UiRow(R.drawable.ic_launcher,
+            UiRow row = new UiRow(R.drawable.ic_contacts,
                     getColorRobust(R.color.row_tint), c.name.isEmpty() ? c.number : c.name,
                     c.number, "");
             row.number = c.number;
@@ -1294,59 +1373,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void setupSquircles(){
-        int glass = getColorRobust(R.color.glass_top);
-        int rim = getColorRobust(R.color.rimlight);
-        int ripple = getColorRobust(R.color.ripple_color);
-        int primary = getColorRobust(R.color.primary);
-        int surface = getColorRobust(R.color.surface_card);
-        // header, tab bar, composer, dialPad - 24dp classic squircle with subtle 0.3dp rimlight
-        SquircleHelper.apply(findViewById(R.id.headerGlass), glass, 24, 0.3f, rim);
-        SquircleHelper.apply(findViewById(R.id.bottomTabBar), getColorRobust(R.color.glass_tab), 24, 0.3f, rim);
-        SquircleHelper.apply(findViewById(R.id.searchPill), getColorRobust(R.color.glass_search), 999, 0.3f, rim);
-        SquircleHelper.apply(findViewById(R.id.composerPanel), glass, 24, 0.3f, rim);
-        SquircleHelper.apply(findViewById(R.id.composerPill), getColorRobust(R.color.glass_composer), 999, 0.3f, rim);
-        SquircleHelper.apply(findViewById(R.id.dialPad), glass, 24, 0.3f, rim);
-        SquircleHelper.apply(findViewById(R.id.settingsPanel), glass, 24, 1, rim); // scrollview bg? will be handled via inner cards
-        // buttons - 16dp G2 with ripple
-        int[] btns = new int[]{R.id.startButton,R.id.stopButton,R.id.refreshButton,R.id.threadBack,R.id.settingsGear,R.id.searchClear};
-        for(int id: btns){ View v=findViewById(id); if(v!=null) SquircleHelper.applyRipple(v, glass, ripple, 16, 0.3f, rim); }
-        SquircleHelper.applyRipple(findViewById(R.id.smsSend), primary, ripple, 999, 0, 0);
-        SquircleHelper.applyRipple(findViewById(R.id.callDialButton), primary, ripple, 16, 0, 0);
-        SquircleHelper.applyRipple(findViewById(R.id.callAnswerButton), getColorRobust(R.color.call_in), ripple, 16, 0, 0);
-        SquircleHelper.applyRipple(findViewById(R.id.callRejectButton), getColorRobust(R.color.err), ripple, 16, 0, 0);
-        // tab pills are already squircle via bg_tab but we override for G2
-        int tabActive=getColorRobust(R.color.tab_active);
-        int tabInactive=0x00000000;
-        for(int id: new int[]{R.id.tabChat,R.id.tabContacts,R.id.tabCall,R.id.tabSettings}){
-            View v=findViewById(id); if(v!=null){
-                boolean checked=((RadioButton)v).isChecked();
-                int fill=checked?tabActive:tabInactive;
-                SquircleHelper.apply(v, fill, 18, 0, 0);
-            }
-        }
-        // settings inner cards - find them via tags? apply to all with bg_glass
-        View sp=findViewById(R.id.settingsPanel);
-        if(sp!=null) applySquircleToChildren((ViewGroup)sp, glass, rim);
-        View tp=findViewById(R.id.threadPanel);
-        if(tp!=null) applySquircleToChildren((ViewGroup)tp, glass, rim);
-    }
-    private void applySquircleToChildren(ViewGroup g, int fill, int rim){
-        if(g==null) return;
-        for(int i=0;i<g.getChildCount();i++){
-            View c=g.getChildAt(i);
-            if(c instanceof ViewGroup) applySquircleToChildren((ViewGroup)c, fill, rim);
-            if(c.getBackground()!=null && c.getId()==View.NO_ID){
-                // heuristic: if it had bg_glass, replace
-                // we check tag or background constant state? simplify: if width>50 and height>30 and c instanceof LinearLayout
-                if(c instanceof LinearLayout && c.getBackground()!=null){
-                    // only apply if not already squircle
-                    // check if it's a card (elevation>0)
-                    if(c.getElevation()>0) SquircleHelper.apply(c, fill, 16, 0.3f, rim);
-                }
-            }
-        }
-    }
     private void liquidSlide(View from, View to){
         if(from==null||to==null||from==to) return;
         float d = 16 * getResources().getDisplayMetrics().density;
@@ -1357,8 +1383,10 @@ public class MainActivity extends Activity {
         to.setTranslationX(d); to.setAlpha(0f);
         to.animate().translationX(0).alpha(1f).setDuration(220).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
     }
-    private void tactile(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); }
-    private boolean isSettingsTab(){ return tabGroup!=null && tabGroup.getCheckedRadioButtonId()==R.id.tabSettings; }
+    private void tap(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); }
+    private void confirm(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.CONFIRM); }
+    private void buzzReject(View v){ if(v!=null) v.performHapticFeedback(HapticFeedbackConstants.REJECT); }
+    private boolean isSettingsTab(){ return tabGroup!=null && tabGroup.getSelectedItemId()==R.id.tabSettings; }
     private String initialsFor(String name){
         if(name==null||name.isEmpty()) return "?";
         String[] parts=name.trim().split("\\s+");
@@ -1482,13 +1510,6 @@ public class MainActivity extends Activity {
                 if(row.snt!=null){ bt.setText(row.snt.body); tm.setText(row.time); }
                 else if(row.rcv!=null){ bt.setText(row.rcv.body); tm.setText(row.time); }
                 else { bt.setText(row.title); tm.setText(row.time); }
-                // G2 squircle bubbles: sent 18,18,4,18 / received 18,18,18,4 with rimlight 0
-                View bubble = ((ViewGroup)v).getChildAt(0);
-                if(bubble!=null){
-                    int fill = type==1 ? act.getColorRobust(R.color.bubble_sent) : act.getColorRobust(R.color.bubble_received);
-                    if(type==1) SquircleHelper.applyAsym(bubble, fill, 18,18,4,18, 0, 0);
-                    else SquircleHelper.applyAsym(bubble, fill, 18,18,18,4, 0, 0);
-                }
                 return v;
             }
             // normal row with avatar
@@ -1498,13 +1519,20 @@ public class MainActivity extends Activity {
             if(avatarText!=null){
                 String initials=act.initialsFor(row.title);
                 avatarText.setText(initials);
-                // tint avatar gradient could vary by hash, keep default
-                if(row.kind!=0){ avatarWrap.setVisibility(View.GONE); if(icon!=null) icon.setVisibility(View.VISIBLE); } else { avatarWrap.setVisibility(View.VISIBLE); if(icon!=null) icon.setVisibility(View.GONE); if(avatarText!=null && row.title!=null) avatarText.setText(initials); }
+                if(row.kind!=0){ if(avatarWrap!=null) avatarWrap.setVisibility(View.GONE); if(icon!=null) icon.setVisibility(View.VISIBLE); }
+                else {
+                    if(avatarWrap!=null){
+                        avatarWrap.setVisibility(View.VISIBLE);
+                        avatarWrap.setBackgroundTintList(ColorStateList.valueOf(
+                                act.avatarColorFor(row.title!=null?row.title:row.number)));
+                    }
+                    if(icon!=null) icon.setVisibility(View.GONE);
+                }
             }
             if(icon!=null){
                 icon.setImageResource(row.icon);
                 icon.setColorFilter(row.color, PorterDuff.Mode.SRC_IN);
-                if (row.kind != 0) icon.setColorFilter(0xFF1677FF, PorterDuff.Mode.SRC_IN);
+                if (row.kind != 0) icon.setColorFilter(act.getColorRobust(R.color.primary), PorterDuff.Mode.SRC_IN);
             }
             TextView title = v.findViewById(R.id.rowTitle);
             TextView sub = v.findViewById(R.id.rowSub);
@@ -1525,17 +1553,6 @@ public class MainActivity extends Activity {
                 sub.setTextColor(act.getColorRobust(R.color.text_secondary));
                 time.setText(row.time);
             }
-            // Classic squircle for row card + soft avatar colors
-            try{
-                int surf=act.getColorRobust(R.color.surface_card);
-                int rim=act.getColorRobust(R.color.rimlight);
-                SquircleHelper.apply(v, surf, 16, 0.3f, rim);
-                View av=v.findViewById(R.id.avatarWrap);
-                if(av!=null){
-                    int avColor=act.avatarColorFor(row.title!=null?row.title:row.number);
-                    SquircleHelper.apply(av, avColor, 20, 0, 0);
-                }
-            }catch(Throwable ignored){}
             return v;
         }
     }

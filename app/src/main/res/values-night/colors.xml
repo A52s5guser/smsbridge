@@ -1,74 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Ant + Liquid Glass tokens (dark) -->
-    <color name="primary">#4096FF</color>
-    <color name="primary_dark">#0958D9</color>
-    <color name="primary_light">#69B1FF</color>
-    <color name="accent">#4096FF</color>
-    <color name="on_accent">#FFFFFF</color>
-    <color name="secondary">#A78BFA</color>
+    <!-- Material 3 baseline scheme, seed #6750A4 (dark) -->
+    <color name="primary">#D0BCFF</color>
+    <color name="primary_dark">#4F378B</color>
+    <color name="primary_light">#EADDFF</color>
+    <color name="accent">#D0BCFF</color>
+    <color name="on_accent">#381E72</color>
+    <color name="secondary">#CCC2DC</color>
+    <color name="on_secondary">#332D41</color>
+    <color name="secondary_container">#4A4458</color>
+    <color name="on_secondary_container">#E8DEF8</color>
+    <color name="primary_container">#4F378B</color>
+    <color name="on_primary_container">#EADDFF</color>
+    <color name="tertiary">#EFB8C8</color>
+    <color name="on_tertiary">#492532</color>
+    <color name="tertiary_container">#633B48</color>
+    <color name="on_tertiary_container">#FFD8E4</color>
 
-    <color name="bg">#0C1018</color>
-    <color name="bg_top">#0F141D</color>
-    <color name="bg_bottom">#080B11</color>
-    <color name="surface">#1F1F1F</color>
+    <color name="bg">#141218</color>
+    <color name="bg_top">#141218</color>
+    <color name="bg_bottom">#1D1B20</color>
+    <color name="surface">#141218</color>
+    <color name="surface_container_lowest">#0F0D13</color>
+    <color name="surface_container_low">#1D1B20</color>
+    <color name="surface_container">#211F26</color>
+    <color name="surface_container_high">#2B2930</color>
+    <color name="surface_container_highest">#36343B</color>
 
-    <!-- Liquid Glass dark 60% -->
-    <color name="glass_top">#991A1A1A</color>
-    <color name="glass_bottom">#991A1A1A</color>
-    <color name="glass_border">#33FFFFFF</color>
-    <color name="glass_sheen">#14FFFFFF</color>
-    <color name="glass_search">#991F1F1F</color>
-    <color name="glass_composer">#991F1F1F</color>
-    <color name="glass_tab">#991A1A1A</color>
-    <color name="rimlight">#33FFFFFF</color>
+    <color name="surface_card">#211F26</color>
+    <color name="card_border">#49454F</color>
 
-    <color name="surface_card">#1F1F1F</color>
-    <color name="card_border">#303030</color>
+    <color name="text_primary">#E6E0E9</color>
+    <color name="text_secondary">#CAC4D0</color>
+    <color name="text_tertiary">#938F99</color>
+    <color name="divider">#49454F</color>
 
-    <color name="header_top">#1677FF</color>
-    <color name="header_bottom">#8B5CF6</color>
-    <color name="header_text">#FFFFFF</color>
-    <color name="header_area">#070A10</color>
+    <color name="ripple_color">#33E6E0E9</color>
+    <color name="row_tint">#D0BCFF</color>
 
-    <color name="text_primary">#E9ECF4</color>
-    <color name="text_secondary">#9AA4B8</color>
-    <color name="text_tertiary">#6B7280</color>
-    <color name="divider">#303030</color>
+    <color name="call_in">#EFB8C8</color>
+    <color name="call_out">#D0BCFF</color>
+    <color name="call_missed">#F2B8B5</color>
+    <color name="call_ended">#938F99</color>
+    <color name="err">#F2B8B5</color>
+    <color name="on_err">#601410</color>
+    <color name="success">#79DD72</color>
+    <color name="warning">#FFB787</color>
 
-    <color name="ripple_color">#22FFFFFF</color>
-    <color name="row_tint">#4096FF</color>
+    <color name="tab_active">#D0BCFF</color>
+    <color name="tab_inactive">#211F26</color>
+    <color name="tab_inactive_text">#CAC4D0</color>
+    <color name="tab_text_checked">#E6E0E9</color>
+    <color name="tab_text_unchecked">#CAC4D0</color>
 
-    <color name="call_in">#16A34A</color>
-    <color name="call_out">#4096FF</color>
-    <color name="call_missed">#FF6B6B</color>
-    <color name="call_ended">#8A93A6</color>
-    <color name="err">#FF6B6B</color>
-    <color name="success">#16A34A</color>
-    <color name="warning">#D97706</color>
+    <color name="seg_fill">#36343B</color>
 
-    <color name="tab_active">#4096FF</color>
-    <color name="tab_inactive">#262626</color>
-    <color name="tab_inactive_text">#8C8C8C</color>
-    <color name="tab_text_checked">#FFFFFF</color>
-    <color name="tab_text_unchecked">@color/tab_inactive_text</color>
-
-    <color name="seg_fill">#262626</color>
-
-    <!-- Bubbles dark -->
-    <color name="bubble_sent">#1677FF</color>
-    <color name="bubble_sent_text">#FFFFFF</color>
-    <color name="bubble_received">#2C2C2E</color>
-    <color name="bubble_received_text">#E9ECF4</color>
-    <color name="bubble_time_sent">#CCFFFFFF</color>
-    <color name="bubble_time_received">#8C8C8C</color>
+    <!-- Bubbles -->
+    <color name="bubble_sent">#D0BCFF</color>
+    <color name="bubble_sent_text">#381E72</color>
+    <color name="bubble_received">#4A4458</color>
+    <color name="bubble_received_text">#E8DEF8</color>
+    <color name="bubble_time_sent">#4F378B</color>
+    <color name="bubble_time_received">#CAC4D0</color>
 
     <!-- Avatars -->
-    <color name="avatar_start">#1677FF</color>
-    <color name="avatar_end">#8B5CF6</color>
     <color name="avatar_text">#FFFFFF</color>
 
-    <!-- Search & Composer -->
-    <color name="search_hint">#6B7280</color>
-    <color name="search_icon">#8C8C8C</color>
+    <!-- Search and composer -->
+    <color name="search_hint">#CAC4D0</color>
+    <color name="search_icon">#CAC4D0</color>
+
+    <!-- Launcher -->
+    <color name="ic_launcher_background">#4F378B</color>
 </resources>

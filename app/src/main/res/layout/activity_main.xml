@@ -1,137 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_app"
+    android:background="@color/bg"
     android:orientation="vertical">
 
-    <!-- Liquid Glass Header + Search (Apple Messages) -->
-    <LinearLayout
-        android:id="@+id/headerGlass"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/headerBar"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/bg"
+        app:menu="@menu/toolbar_menu"
+        app:title="Messages"
+        app:titleTextColor="@color/text_primary" />
+
+    <TextView
+        android:id="@+id/headerSubtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        android:background="@drawable/bg_glass"
-        android:elevation="4dp"
-        android:outlineAmbientShadowColor="@color/primary"
-        android:outlineSpotShadowColor="@color/primary"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/header_sender"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+    <LinearLayout
+        android:id="@+id/searchPill"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/m3_search_field"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="16dp"
+        android:paddingRight="8dp">
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_search"
+            android:tint="@color/search_icon" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Messages"
-                    android:textColor="@color/text_primary"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:fontFamily="sans-serif-medium" />
+        <EditText
+            android:id="@+id/searchInput"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="12dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Search"
+            android:inputType="text"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/search_hint"
+            android:textSize="16sp" />
 
-                <TextView
-                    android:id="@+id/headerSubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/header_sender"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/settingsGear"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_btn_glass"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:stateListAnimator="@animator/tactile_button"
-                android:text="⚙"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <!-- Apple pill search -->
-        <LinearLayout
-            android:id="@+id/searchPill"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_search_pill"
-            android:elevation="1dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingLeft="14dp"
-            android:paddingRight="6dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="⌕"
-                android:textColor="@color/search_icon"
-                android:textSize="16sp" />
-
-            <EditText
-                android:id="@+id/searchInput"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="8dp"
-                android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:hint="Search"
-                android:inputType="text"
-                android:maxLines="1"
-                android:singleLine="true"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/search_hint"
-                android:textSize="15sp" />
-
-            <Button
-                android:id="@+id/searchClear"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:background="@drawable/bg_btn_glass"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:text="✕"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:visibility="gone" />
-        </LinearLayout>
+        <ImageButton
+            android:id="@+id/searchClear"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Clear search"
+            android:src="@drawable/ic_close"
+            android:tint="@color/text_secondary"
+            android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Main content area -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false">
 
-        <!-- Chats list -->
         <ListView
             android:id="@+id/chatList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
             android:clipToPadding="false"
-            android:divider="@android:color/transparent"
-            android:dividerHeight="8dp"
+            android:divider="@drawable/m3_divider"
+            android:dividerHeight="1dp"
             android:listSelector="@android:color/transparent"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingTop="4dp"
+            android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:scrollbars="none" />
 
@@ -141,17 +98,14 @@
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
             android:clipToPadding="false"
-            android:divider="@android:color/transparent"
-            android:dividerHeight="6dp"
+            android:divider="@drawable/m3_divider"
+            android:dividerHeight="1dp"
             android:listSelector="@android:color/transparent"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingTop="4dp"
+            android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:scrollbars="none"
             android:visibility="gone" />
 
-        <!-- Calls page: recents + iPhone dialer -->
         <LinearLayout
             android:id="@+id/callsPage"
             android:layout_width="match_parent"
@@ -162,58 +116,44 @@
             <ListView
                 android:id="@+id/callList"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="match_parent"
                 android:background="@android:color/transparent"
                 android:clipToPadding="false"
-                android:divider="@android:color/transparent"
-                android:dividerHeight="8dp"
+                android:divider="@drawable/m3_divider"
+                android:dividerHeight="1dp"
                 android:listSelector="@android:color/transparent"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp"
-                android:paddingTop="4dp"
+                android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:scrollbars="none" />
-
-            <!-- iPhone dialer will be dialPad below, kept visible inside callsPage when that tab active -->
         </LinearLayout>
 
-        <!-- Thread (conversation) — Apple bubble style -->
         <LinearLayout
             android:id="@+id/threadPanel"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:visibility="gone"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp">
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:background="@drawable/bg_glass"
-                android:elevation="2dp"
+                android:layout_height="64dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="10dp">
+                android:paddingLeft="4dp"
+                android:paddingRight="16dp">
 
-                <Button
+                <ImageButton
                     android:id="@+id/threadBack"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_btn_glass"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:stateListAnimator="@animator/tactile_button"
-                    android:text="‹"
-                    android:textColor="@color/primary"
-                    android:textSize="24sp" />
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Back"
+                    android:src="@drawable/ic_back"
+                    android:tint="@color/text_primary" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -237,17 +177,13 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/threadCall"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_btn_primary"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:stateListAnimator="@animator/tactile_button"
-                    android:text="📞"
-                    android:textColor="@color/on_accent"
-                    android:textSize="16sp" />
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/act_call"
+                    app:icon="@drawable/ic_call" />
             </LinearLayout>
 
             <ListView
@@ -260,20 +196,21 @@
                 android:divider="@android:color/transparent"
                 android:dividerHeight="6dp"
                 android:listSelector="@android:color/transparent"
-                android:paddingTop="2dp"
-                android:paddingBottom="80dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="16dp"
                 android:scrollbars="none"
                 android:transcriptMode="alwaysScroll" />
         </LinearLayout>
 
-        <!-- Settings (new) -->
         <ScrollView
             android:id="@+id/settingsPanel"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
             android:clipToPadding="false"
-            android:padding="12dp"
+            android:padding="16dp"
             android:scrollbars="none"
             android:visibility="gone">
 
@@ -282,24 +219,22 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Connection -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="4dp"
-                    android:layout_marginBottom="6dp"
+                    android:layout_marginBottom="8dp"
                     android:text="CONNECTION"
                     android:textColor="@color/text_secondary"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
                     android:letterSpacing="0.06" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_glass"
-                    android:elevation="2dp"
+                    android:background="@drawable/m3_card"
                     android:orientation="vertical"
-                    android:padding="12dp">
+                    android:padding="16dp">
 
                     <RadioGroup
                         android:id="@+id/roleGroup"
@@ -307,150 +242,168 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_seg"
                         android:orientation="horizontal"
-                        android:padding="3dp">
+                        android:padding="4dp">
 
                         <RadioButton
                             android:id="@+id/roleSender"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:background="@drawable/bg_tab"
                             android:button="@null"
-                            android:gravity="center"
+                            android:gravity="left|center_vertical"
+                            android:minHeight="76dp"
                             android:minWidth="0dp"
-                            android:stateListAnimator="@animator/tactile_button"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="12dp"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp"
                             android:text="@string/role_sender_short"
                             android:textColor="@color/tab_text"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:textSize="14sp" />
 
                         <RadioButton
                             android:id="@+id/roleReceiver"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_marginLeft="3dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="4dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_tab"
                             android:button="@null"
-                            android:gravity="center"
+                            android:gravity="left|center_vertical"
+                            android:minHeight="76dp"
                             android:minWidth="0dp"
-                            android:stateListAnimator="@animator/tactile_button"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="12dp"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp"
                             android:text="@string/role_receiver_short"
                             android:textColor="@color/tab_text"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:textSize="14sp" />
                     </RadioGroup>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="4dp"
+                        android:text="Paired phone"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="Pick the other phone. Pair it first in Bluetooth settings."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <Spinner
-                            android:id="@+id/peerSpinner"
+                        <TextView
+                            android:id="@+id/peerEmpty"
                             android:layout_width="0dp"
-                            android:layout_height="48dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:minHeight="44dp" />
+                            android:text="@string/peer_none"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/refreshButton"
-                            android:layout_width="44dp"
-                            android:layout_height="40dp"
-                            android:layout_marginLeft="6dp"
-                            android:background="@drawable/bg_btn_glass"
-                            android:minWidth="0dp"
-                            android:stateListAnimator="@animator/tactile_button"
-                            android:text="@string/refresh_short"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            style="@style/Widget.Material3.Button.IconButton"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:contentDescription="@string/refresh"
+                            android:insetLeft="0dp"
+                            android:insetRight="0dp"
+                            app:icon="@drawable/ic_refresh"
+                            app:iconPadding="0dp" />
                     </LinearLayout>
+
+                    <ListView
+                        android:id="@+id/peerList"
+                        android:layout_width="match_parent"
+                        android:layout_height="192dp"
+                        android:background="@android:color/transparent"
+                        android:clipToPadding="false"
+                        android:divider="@drawable/m3_divider"
+                        android:dividerHeight="1dp"
+                        android:listSelector="@android:color/transparent"
+                        android:scrollbars="vertical" />
 
                     <TextView
                         android:id="@+id/statusText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="12dp"
                         android:text="@string/status"
                         android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="12dp"
                         android:orientation="horizontal">
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/startButton"
+                            style="@style/Widget.Material3.Button"
                             android:layout_width="0dp"
-                            android:layout_height="44dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_btn_primary"
-                            android:minHeight="44dp"
-                            android:stateListAnimator="@animator/tactile_button"
-                            android:text="@string/start"
-                            android:textColor="@color/on_accent"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:text="@string/start" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/stopButton"
+                            style="@style/Widget.Material3.Button.TonalButton"
                             android:layout_width="0dp"
-                            android:layout_height="44dp"
+                            android:layout_height="wrap_content"
                             android:layout_marginLeft="8dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_btn_glass"
-                            android:minHeight="44dp"
-                            android:stateListAnimator="@animator/tactile_button"
-                            android:text="@string/stop"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:text="@string/stop" />
                     </LinearLayout>
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/simulateButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/bg_btn_glass"
-                        android:minHeight="44dp"
-                        android:stateListAnimator="@animator/tactile_button"
-                        android:text="@string/simulate_short"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/simulate_short" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="4dp"
-                    android:layout_marginTop="18dp"
-                    android:layout_marginBottom="6dp"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="8dp"
                     android:text="ABOUT"
                     android:textColor="@color/text_secondary"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
                     android:letterSpacing="0.06" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_glass"
-                    android:elevation="2dp"
+                    android:background="@drawable/m3_card"
                     android:orientation="vertical"
-                    android:padding="14dp">
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="SMSBridge — Messages over Bluetooth"
+                        android:text="SMSBridge - Messages over Bluetooth"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -459,14 +412,14 @@
                         android:layout_marginTop="4dp"
                         android:text="Turn a spare phone into a second phone. No internet, no servers."
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/aboutVersion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="v0.3.0"
+                        android:text="1.0.0"
                         android:textColor="@color/text_tertiary"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -475,270 +428,131 @@
 
     </FrameLayout>
 
-    <!-- Floating pill composer (Apple) — glass + blur -->
     <LinearLayout
         android:id="@+id/composerPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass"
-        android:elevation="6dp"
-        android:outlineAmbientShadowColor="@color/primary"
-        android:outlineSpotShadowColor="@color/primary"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="12dp"
         android:orientation="vertical"
-        android:padding="10dp"
         android:visibility="gone">
 
-        <!-- To field (Apple new-message style, hidden in thread) -->
         <EditText
             android:id="@+id/smsToNumber"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_search_pill"
+            android:background="@drawable/m3_field_box"
             android:hint="@string/sms_to_hint"
             android:inputType="phone"
-            android:minHeight="44dp"
-            android:paddingLeft="14dp"
-            android:paddingRight="14dp"
+            android:minHeight="48dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
             android:textColor="@color/text_primary"
             android:textColorHint="@color/search_hint"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
 
         <LinearLayout
-            android:id="@+id/composerPill"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:background="@drawable/bg_composer_pill"
-            android:elevation="1dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="6dp">
+            android:orientation="horizontal">
 
             <EditText
                 android:id="@+id/smsBody"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
+                android:background="@drawable/m3_field_box"
                 android:hint="@string/sms_body_hint"
                 android:inputType="textMultiLine|textCapSentences"
                 android:maxLines="4"
-                android:minHeight="36dp"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
+                android:minHeight="48dp"
+                android:padding="16dp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/search_hint"
-                android:textSize="15sp" />
+                android:textSize="16sp" />
 
-            <Button
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/smsSend"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_btn_primary"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:stateListAnimator="@animator/tactile_button"
-                android:text="↑"
-                android:textColor="@color/on_accent"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:contentDescription="@string/sms_send"
+                android:src="@drawable/ic_send"
+                app:fabSize="mini" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- iPhone dialer (shown only on Calls tab) -->
     <LinearLayout
         android:id="@+id/dialPad"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass"
-        android:elevation="3dp"
-        android:outlineAmbientShadowColor="@color/primary"
-        android:outlineSpotShadowColor="@color/primary"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="12dp"
         android:orientation="vertical"
-        android:padding="12dp"
         android:visibility="gone">
 
         <EditText
             android:id="@+id/callNumber"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_search_pill"
+            android:background="@drawable/m3_field_box"
             android:gravity="center"
             android:hint="@string/call_dialer_hint"
             android:inputType="phone"
-            android:minHeight="40dp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
+            android:minHeight="48dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
             android:textColor="@color/text_primary"
             android:textColorHint="@color/search_hint"
-            android:textSize="16sp"
-            android:letterSpacing="0.02" />
+            android:textSize="16sp" />
 
-        <!-- Simple 3-button row for now + dialer grid could be added later -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/callDialButton"
+                style="@style/Widget.Material3.Button"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/bg_btn_primary"
-                android:singleLine="true"
-                android:stateListAnimator="@animator/tactile_button"
-                android:text="@string/call_dial"
-                android:textColor="@color/on_accent"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:text="@string/call_dial" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/callAnswerButton"
+                style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:layout_weight="1"
-                android:background="@drawable/bg_btn_answer"
-                android:singleLine="true"
-                android:stateListAnimator="@animator/tactile_button"
-                android:text="@string/call_answer"
-                android:textColor="@color/on_accent"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:text="@string/call_answer" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/callRejectButton"
+                style="@style/Widget.Material3.Button"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
                 android:layout_weight="1"
-                android:background="@drawable/bg_btn_reject"
-                android:singleLine="true"
-                android:stateListAnimator="@animator/tactile_button"
                 android:text="@string/call_reject"
-                android:textColor="@color/on_accent"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textColor="@color/on_err"
+                app:backgroundTint="@color/err" />
         </LinearLayout>
-
-        <Button
-            android:id="@+id/callDialerButton"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_btn_glass"
-            android:minHeight="36dp"
-            android:stateListAnimator="@animator/tactile_button"
-            android:text="@string/call_set_dialer"
-            android:textColor="@color/text_primary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Bottom Liquid Glass Tab Bar — 4 tabs -->
-    <LinearLayout
-        android:id="@+id/bottomTabBar"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/tabGroup"
         android:layout_width="match_parent"
-        android:layout_height="68dp"
-        android:layout_margin="12dp"
-        android:background="@drawable/bg_tab_bar_glass"
-        android:elevation="8dp"
-        android:outlineAmbientShadowColor="@color/primary"
-        android:outlineSpotShadowColor="@color/primary"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="6dp">
-
-        <RadioGroup
-            android:id="@+id/tabGroup"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            android:orientation="horizontal"
-            android:padding="2dp">
-
-            <RadioButton
-                android:id="@+id/tabChat"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp"
-                android:background="@drawable/bg_tab"
-                android:button="@null"
-                android:checked="true"
-                android:gravity="center"
-                android:minWidth="0dp"
-                android:stateListAnimator="@animator/tactile_button"
-                android:text="@string/tab_chats"
-                android:textColor="@color/tab_text"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <RadioButton
-                android:id="@+id/tabContacts"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp"
-                android:background="@drawable/bg_tab"
-                android:button="@null"
-                android:gravity="center"
-                android:minWidth="0dp"
-                android:stateListAnimator="@animator/tactile_button"
-                android:text="@string/tab_contacts"
-                android:textColor="@color/tab_text"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <RadioButton
-                android:id="@+id/tabCall"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp"
-                android:background="@drawable/bg_tab"
-                android:button="@null"
-                android:gravity="center"
-                android:minWidth="0dp"
-                android:stateListAnimator="@animator/tactile_button"
-                android:text="@string/tab_calls"
-                android:textColor="@color/tab_text"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <RadioButton
-                android:id="@+id/tabSettings"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp"
-                android:background="@drawable/bg_tab"
-                android:button="@null"
-                android:gravity="center"
-                android:minWidth="0dp"
-                android:stateListAnimator="@animator/tactile_button"
-                android:text="Settings"
-                android:textColor="@color/tab_text"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-        </RadioGroup>
-    </LinearLayout>
+        android:layout_height="80dp"
+        android:background="@color/surface_container"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/nav_tabs" />
 
 </LinearLayout>
