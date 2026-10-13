@@ -2,6 +2,7 @@ package com.smsbridge;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -34,10 +35,16 @@ public class ReceiverService extends Service {
         if (ACTION_STOP.equals(action)) {
             Log.d(TAG, "stop requested");
             listener.stop();
+            stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
             return START_NOT_STICKY;
         }
 
+        startForeground(NotificationHelper.ID_RECEIVER,
+                NotificationHelper.serviceNotification(this,
+                        getString(R.string.notif_receiver_title),
+                        getString(R.string.notif_receiver_text)),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         listener.start();
         return START_STICKY;
     }

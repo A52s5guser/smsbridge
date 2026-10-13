@@ -66,6 +66,19 @@
                 android:layout_marginLeft="8dp"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/rowEdit"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginLeft="8dp"
+                android:alpha="0.45"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Edit nickname"
+                android:padding="2dp"
+                android:src="@drawable/ic_edit"
+                android:tint="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
         </LinearLayout>
 
         <TextView

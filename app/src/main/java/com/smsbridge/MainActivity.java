@@ -280,6 +280,17 @@ public class MainActivity extends AppCompatActivity {
                 stopServices();
             }
         });
+        android.widget.CompoundButton alwaysOnSwitch = findViewById(R.id.alwaysOnSwitch);
+        if (alwaysOnSwitch != null) {
+            alwaysOnSwitch.setChecked(!Prefs.get(this).isServiceStopped());
+            alwaysOnSwitch.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(android.widget.CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) onStartPressed();
+                    else stopServices();
+                }
+            });
+        }
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -366,6 +377,7 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(uiEvents, f, Context.RECEIVER_NOT_EXPORTED);
         refreshPeers();
         refreshAll();
+        if (!Prefs.get(this).isServiceStopped()) onStartPressed();
     }
 
     @Override
@@ -686,28 +698,34 @@ public class MainActivity extends AppCompatActivity {
         }
 
         boolean sender = p.isSender();
+        p.setServiceStopped(false);
         Intent svc = new Intent(this, sender ? ForwarderService.class : ReceiverService.class)
                 .setAction(sender ? ForwarderService.ACTION_START : ReceiverService.ACTION_START);
         try {
-            if (sender) {
-                startForegroundService(svc);
-            } else {
-                startService(svc);
-            }
+            startForegroundService(svc);
         } catch (Exception e) {
             Toast.makeText(this, "Failed to start service: " + e.getMessage(),
                     Toast.LENGTH_LONG).show();
             return;
         }
+        syncAlwaysOnSwitch(true);
         statusText.setText(sender ? R.string.status_sender : R.string.status_receiver);
     }
 
     private void stopServices() {
+        Prefs.get(this).setServiceStopped(true);
         startService(new Intent(this, ForwarderService.class)
                 .setAction(ForwarderService.ACTION_STOP));
         startService(new Intent(this, ReceiverService.class)
                 .setAction(ReceiverService.ACTION_STOP));
+        syncAlwaysOnSwitch(false);
         statusText.setText(R.string.status);
+    }
+
+    private void syncAlwaysOnSwitch(boolean on) {
+        android.widget.CompoundButton sw = findViewById(R.id.alwaysOnSwitch);
+        if (sw != null) sw.setOnCheckedChangeListener(null);
+        if (sw != null) sw.setChecked(on);
     }
 
     private void simulateSms() {
@@ -1170,12 +1188,38 @@ public class MainActivity extends AppCompatActivity {
     private String contactNameFor(String number) {
         try {
             String key = cleanNum(number);
+            String nick = Prefs.get(this).getNickname(key);
+            if (!nick.isEmpty()) return nick;
             for (ContactsStore.Contact ct : ContactsStore.get(this).getAll()) {
                 if (cleanNum(ct.number).equals(key) && !ct.name.isEmpty()) return ct.name;
             }
         } catch (Exception ignored) {
         }
         return "";
+    }
+
+    private void editNickname(final String number) {
+        final Prefs p = Prefs.get(this);
+        final EditText input = new EditText(this);
+        input.setHint(R.string.nick_hint);
+        input.setText(p.getNickname(number));
+        input.setSingleLine(true);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(number)
+                .setMessage(R.string.nick_msg)
+                .setView(input)
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        p.setNickname(number, input.getText().toString().trim());
+                        rebuildLists();
+                        if (openThreadNumber != null && cleanNum(openThreadNumber).equals(cleanNum(number))) {
+                            openThread(openThreadNumber);
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private List<UiRow> buildPeople() {
@@ -1325,8 +1369,9 @@ public class MainActivity extends AppCompatActivity {
         if (number == null || number.isEmpty()) return;
         openThreadNumber = number;
         String name = contactNameFor(number);
+        String nick = Prefs.get(this).getNickname(cleanNum(number));
         threadTitle.setText(name.isEmpty() ? number : name);
-        threadSub.setText(number);
+        threadSub.setText(!nick.isEmpty() ? (name + "  (" + number + ")") : number);
         smsToNumber.setEnabled(false);
         smsToNumber.setAlpha(0.7f);
         smsToNumber.setText(number);
@@ -1590,6 +1635,21 @@ public class MainActivity extends AppCompatActivity {
             TextView title = v.findViewById(R.id.rowTitle);
             TextView sub = v.findViewById(R.id.rowSub);
             TextView time = v.findViewById(R.id.rowTime);
+            ImageView edit = v.findViewById(R.id.rowEdit);
+            if (edit != null) {
+                if (row.kind == KIND_NORMAL && row.number != null && !row.number.isEmpty()) {
+                    edit.setVisibility(View.VISIBLE);
+                    edit.setOnClickListener(new View.OnClickListener() {
+                        @Override public void onClick(View ev) {
+                            act.tap(ev);
+                            act.editNickname(row.number);
+                        }
+                    });
+                } else {
+                    edit.setVisibility(View.GONE);
+                    edit.setOnClickListener(null);
+                }
+            }
             if (row.kind == KIND_SEE_MORE) {
                 int extra = 0;
                 try { extra = Integer.parseInt(row.title); } catch (Exception ignored) {}

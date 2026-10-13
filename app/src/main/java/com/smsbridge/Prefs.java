@@ -17,6 +17,8 @@ public final class Prefs {
     private static final String K_PEER_MAC = "peer_mac";
     private static final String K_PEER_NAME = "peer_name";
     private static final String K_THEME = "theme";
+    private static final String K_SVC_STOPPED = "svc_stopped";
+    private static final String K_NICK_PREFIX = "nick_";
 
     private final SharedPreferences sp;
     private static Prefs s;
@@ -66,5 +68,23 @@ public final class Prefs {
 
     public void setTheme(String theme) {
         sp.edit().putString(K_THEME, theme).apply();
+    }
+
+    public boolean isServiceStopped() {
+        return sp.getBoolean(K_SVC_STOPPED, false);
+    }
+
+    public void setServiceStopped(boolean stopped) {
+        sp.edit().putBoolean(K_SVC_STOPPED, stopped).apply();
+    }
+
+    public String getNickname(String number) {
+        if (number == null) return "";
+        return sp.getString(K_NICK_PREFIX + number, "");
+    }
+
+    public void setNickname(String number, String name) {
+        if (number == null) return;
+        sp.edit().putString(K_NICK_PREFIX + number, name == null ? "" : name).apply();
     }
 }

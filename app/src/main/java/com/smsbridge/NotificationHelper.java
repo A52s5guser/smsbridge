@@ -82,8 +82,8 @@ public final class NotificationHelper {
     public static void smsStatus(Context c, String to, boolean ok, String err) {
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;
-        String title = ok ? "SMS sent to " + to : ("SMS to " + to + " failed");
-        String text = ok ? "\u2705 Delivered to the network" : (err == null ? "" : err);
+        String title = ok ? "Message sent to " + to : ("Message to " + to + " failed");
+        String text = ok ? "Delivered" : (err == null ? "" : err);
         Notification n = new Notification.Builder(c, CH_MSG)
                 .setSmallIcon(R.drawable.ic_notif_sms)
                 .setContentTitle(title)
