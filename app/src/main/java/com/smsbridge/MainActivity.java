@@ -11,12 +11,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.Insets;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.Editable;
@@ -56,6 +59,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity {
     private static final int REQ_PERMS = 1;
     private static final int REQ_DIALER_ROLE = 2;
+    private static final int REQ_AVATAR = 3;
 
     private static final int KIND_NORMAL = 0;
     private static final int KIND_SEE_MORE = 1;
@@ -64,6 +68,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_LOG = "log";
     private static final String KEY_CHAT = "chat";
     private static final String KEY_CALL = "call";
+
+    // Outgoing message states: timer (waiting for sender ack), check
+    // (sender confirmed), retry (failed — tap to resend).
+    static final int MSG_SENDING = 0;
+    static final int MSG_DELIVERED = 1;
+    static final int MSG_FAILED = 2;
+    private static final long SMS_ACK_TIMEOUT_MS = 10000L;
+    private final java.util.Set<String> smsTimeouts = new java.util.HashSet<>();
+    private final Handler smsHandler = new Handler(Looper.getMainLooper());
 
     private RadioGroup roleGroup;
     private NavigationBarView tabGroup;
@@ -79,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView threadSub;
     private View threadBack;
     private Button threadCall;
+    private ImageView threadAvatar;
+    private View threadEdit;
+    private String pendingAvatarNumber;
+    private String editorNumber;
+    private ImageView editorPreview;
+    private EditText editorInput;
     private View composerPanel;
     private View dialPad;
     private Button simulateButton;
@@ -192,6 +211,17 @@ public class MainActivity extends AppCompatActivity {
         threadSub = findViewById(R.id.threadSub);
         threadBack = findViewById(R.id.threadBack);
         threadCall = findViewById(R.id.threadCall);
+        threadAvatar = findViewById(R.id.threadAvatar);
+        threadEdit = findViewById(R.id.threadEdit);
+        if (threadEdit != null) {
+            threadEdit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    tap(v);
+                    if (openThreadNumber != null) showContactEditor(openThreadNumber);
+                }
+            });
+        }
         composerPanel = findViewById(R.id.composerPanel);
         dialPad = findViewById(R.id.dialPad);
         simulateButton = findViewById(R.id.simulateButton);
@@ -377,6 +407,13 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(uiEvents, f, Context.RECEIVER_NOT_EXPORTED);
         refreshPeers();
         refreshAll();
+        // Anything left in-flight (e.g. app was killed mid-send) gets a fresh
+        // 10s window before it flips to retry, instead of a stuck timer.
+        for (OutboxStore.Sent s : OutboxStore.get(this).getAll()) {
+            if (msgState(s) == MSG_SENDING && s.msgId != null && !s.msgId.isEmpty()) {
+                scheduleSmsTimeout(s.msgId);
+            }
+        }
         if (!Prefs.get(this).isServiceStopped()) onStartPressed();
     }
 
@@ -441,6 +478,37 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_DIALER_ROLE) {
             refreshAll();
+        } else if (requestCode == REQ_AVATAR) {
+            final String key = pendingAvatarNumber;
+            pendingAvatarNumber = null;
+            if (resultCode != RESULT_OK || data == null || data.getData() == null || key == null) return;
+            final android.net.Uri uri = data.getData();
+            try {
+                getContentResolver().takePersistableUriPermission(uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (Exception ignored) {
+            }
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    final boolean ok = AvatarStore.saveFromUri(MainActivity.this, key, uri);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (ok) {
+                                // Keep any typed nickname so it isn't lost.
+                                saveEditorNickname();
+                                rebuildLists();
+                                refreshThreadHeader();
+                                refreshEditorPreview();
+                            } else {
+                                Toast.makeText(MainActivity.this, R.string.avatar_fail,
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }
+            });
         }
     }
 
@@ -840,12 +908,23 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Select a peer device first", Toast.LENGTH_SHORT).show();
             return;
         }
-        final String finalTo = to;
-        final String finalBody = body;
         final String msgId = String.valueOf(System.nanoTime() & 0xFFFFFFFFL);
-        OutboxStore.get(this).add(finalTo, finalBody, "queued", msgId);
+        OutboxStore.get(this).add(to, body, OutboxStore.STATUS_SENDING, msgId);
         smsBody.setText("");
         sendAnim(smsSend);
+        rebuildLists();
+        transmitSms(to, body, msgId);
+    }
+
+    /** Sends (or re-sends) a queued message to the sender device over Bluetooth. */
+    private void transmitSms(final String to, final String body, final String msgId) {
+        final String mac = Prefs.get(this).getPeerMac();
+        if (mac == null) {
+            OutboxStore.get(this).markFailed(msgId, getString(R.string.toast_no_peer));
+            rebuildLists();
+            return;
+        }
+        scheduleSmsTimeout(msgId);
         exec.execute(new Runnable() {
             @Override
             public void run() {
@@ -853,19 +932,103 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     org.json.JSONObject frame = new org.json.JSONObject();
                     frame.put(Protocol.FIELD_TYPE, Protocol.TYPE_SMS_SEND);
-                    frame.put(Protocol.FIELD_TO, finalTo);
-                    frame.put(Protocol.FIELD_BODY, finalBody);
+                    frame.put(Protocol.FIELD_TO, to);
+                    frame.put(Protocol.FIELD_BODY, body);
                     frame.put(Protocol.FIELD_MSG_ID, msgId);
                     frame.put(Protocol.FIELD_TS, System.currentTimeMillis());
                     ok = BtController.sendFrame(MainActivity.this, mac, frame);
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     envoyLog(false, "SMS send failed: "
                             + (e.getMessage() == null ? e.toString() : e.getMessage()));
                     return;
                 }
+                if (ok) {
+                    // Sender device confirmed receipt: delivered check.
+                    OutboxStore.get(MainActivity.this).markDelivered(msgId);
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() { rebuildLists(); }
+                    });
+                }
                 envoyLog(ok, ok ? "\u21a6 SMS sent \u2192 peer" : "No ack from peer");
             }
         });
+    }
+
+    /** 10s after queueing, anything still unacked flips to failed (retry). */
+    private void scheduleSmsTimeout(final String msgId) {
+        if (msgId == null || msgId.isEmpty() || !smsTimeouts.add(msgId)) return;
+        smsHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                smsTimeouts.remove(msgId);
+                OutboxStore.Sent s = OutboxStore.get(MainActivity.this).findByMsgId(msgId);
+                if (s != null && !s.ok && !OutboxStore.STATUS_FAILED.equals(s.status)) {
+                    OutboxStore.get(MainActivity.this).markFailed(
+                            msgId, getString(R.string.msg_no_ack));
+                    if (!isFinishing() && !isDestroyed()) rebuildLists();
+                }
+            }
+        }, SMS_ACK_TIMEOUT_MS);
+    }
+
+    /** Retry tap: flip back to sending and transmit again. */
+    private void retryMessage(OutboxStore.Sent s) {
+        if (s == null || s.msgId == null || s.msgId.isEmpty()) return;
+        OutboxStore.get(this).resetToSending(s.msgId);
+        rebuildLists();
+        transmitSms(s.to, s.body, s.msgId);
+    }
+
+    /** Binds the timer / delivered / retry status row inside a sent bubble. */
+    private void bindSentStatus(View bubble, final OutboxStore.Sent s) {
+        View statusRow = bubble.findViewById(R.id.bubbleStatusRow);
+        ImageView si = bubble.findViewById(R.id.bubbleStatusIcon);
+        TextView st = bubble.findViewById(R.id.bubbleStatus);
+        if (statusRow == null || si == null || st == null) return;
+        int state = msgState(s);
+        int onPrimary = getThemeColor(R.attr.colorOnPrimary);
+        statusRow.setOnClickListener(null);
+        statusRow.setClickable(false);
+        // NB: never focusable — a focusable child disables ListView row taps.
+        statusRow.setFocusable(false);
+        if (state == MSG_DELIVERED) {
+            statusRow.setBackground(null);
+            si.setImageResource(R.drawable.ic_check);
+            si.setColorFilter(onPrimary, PorterDuff.Mode.SRC_IN);
+            st.setText(R.string.msg_delivered);
+            st.setTextColor(onPrimary);
+        } else if (state == MSG_FAILED) {
+            // Dark red-tinted pill with bright text: readable on every
+            // bubble color, including the white mono-theme bubble.
+            statusRow.setBackgroundResource(R.drawable.m3_retry_pill);
+            si.setImageResource(R.drawable.ic_refresh);
+            si.setColorFilter(0xFFFFB4AB, PorterDuff.Mode.SRC_IN);
+            st.setText(R.string.msg_retry);
+            st.setTextColor(0xFFFFB4AB);
+            statusRow.setClickable(true);
+            statusRow.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) {
+                    confirm(v);
+                    retryMessage(s);
+                }
+            });
+        } else {
+            statusRow.setBackground(null);
+            si.setImageResource(R.drawable.ic_schedule);
+            si.setColorFilter(onPrimary, PorterDuff.Mode.SRC_IN);
+            st.setText(R.string.msg_sending);
+            st.setTextColor(onPrimary);
+        }
+    }
+
+    /** Maps a stored entry (including legacy statuses) onto the 3 bubble states. */
+    static int msgState(OutboxStore.Sent s) {
+        if (s == null) return MSG_SENDING;
+        if (s.ok || OutboxStore.STATUS_DELIVERED.equals(s.status)
+                || "sent".equals(s.status)) return MSG_DELIVERED;
+        if (OutboxStore.STATUS_FAILED.equals(s.status)
+                || (s.status != null && s.status.startsWith("failed"))) return MSG_FAILED;
+        return MSG_SENDING;
     }
 
     private void envoyLog(boolean ok, String text) {
@@ -1198,28 +1361,126 @@ public class MainActivity extends AppCompatActivity {
         return "";
     }
 
-    private void editNickname(final String number) {
+    /** Nickname + profile picture editor for one number. */
+    private void showContactEditor(final String number) {
+        if (number == null || number.isEmpty()) return;
+        final String key = cleanNum(number);
         final Prefs p = Prefs.get(this);
+        float density = getResources().getDisplayMetrics().density;
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (20 * density);
+        root.setPadding(pad, (int) (4 * density), pad, 0);
+
+        final ImageView preview = new ImageView(this);
+        LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(
+                (int) (72 * density), (int) (72 * density));
+        pp.gravity = android.view.Gravity.CENTER_HORIZONTAL;
+        pp.bottomMargin = (int) (12 * density);
+        preview.setLayoutParams(pp);
+        preview.setClickable(true);
+        preview.setFocusable(true);
+        preview.setBackgroundResource(android.R.drawable.list_selector_background);
+        preview.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                tap(v);
+                saveEditorNickname();
+                showAvatarChooser(key);
+            }
+        });
+        root.addView(preview);
+
         final EditText input = new EditText(this);
         input.setHint(R.string.nick_hint);
-        input.setText(p.getNickname(number));
+        input.setText(p.getNickname(key));
         input.setSingleLine(true);
+        root.addView(input);
+
+        editorNumber = key;
+        editorPreview = preview;
+        editorInput = input;
+        refreshEditorPreview();
+
         new MaterialAlertDialogBuilder(this)
                 .setTitle(number)
                 .setMessage(R.string.nick_msg)
-                .setView(input)
+                .setView(root)
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int which) {
-                        p.setNickname(number, input.getText().toString().trim());
-                        rebuildLists();
-                        if (openThreadNumber != null && cleanNum(openThreadNumber).equals(cleanNum(number))) {
-                            openThread(openThreadNumber);
+                        saveEditorNickname();
+                        editorNumber = null;
+                        editorPreview = null;
+                        editorInput = null;
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        editorNumber = null;
+                        editorPreview = null;
+                        editorInput = null;
+                    }
+                })
+                .show();
+    }
+
+    private void saveEditorNickname() {
+        if (editorNumber == null || editorInput == null) return;
+        Prefs.get(this).setNickname(editorNumber, editorInput.getText().toString().trim());
+        rebuildLists();
+        refreshThreadHeader();
+    }
+
+    private void refreshEditorPreview() {
+        if (editorPreview == null || editorNumber == null) return;
+        Bitmap ab = AvatarStore.load(this, editorNumber);
+        if (ab != null) {
+            editorPreview.setImageBitmap(ab);
+            editorPreview.setColorFilter(null);
+        } else {
+            editorPreview.setImageResource(R.drawable.ic_contacts);
+            editorPreview.setColorFilter(getThemeColor(R.attr.colorPrimary),
+                    PorterDuff.Mode.SRC_IN);
+        }
+    }
+
+    private void showAvatarChooser(final String key) {
+        final boolean has = AvatarStore.hasAvatar(this, key);
+        CharSequence[] items = has
+                ? new CharSequence[]{getString(R.string.avatar_change), getString(R.string.avatar_remove)}
+                : new CharSequence[]{getString(R.string.avatar_change)};
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.avatar_pick_title)
+                .setItems(items, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        if (has && which == 1) {
+                            AvatarStore.remove(MainActivity.this, key);
+                            rebuildLists();
+                            refreshThreadHeader();
+                            refreshEditorPreview();
+                        } else {
+                            openAvatarPicker(key);
                         }
                     }
                 })
-                .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void openAvatarPicker(String key) {
+        pendingAvatarNumber = cleanNum(key);
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.setType("image/*");
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            startActivityForResult(i, REQ_AVATAR);
+        } catch (Exception e) {
+            Toast.makeText(this, R.string.avatar_fail, Toast.LENGTH_SHORT).show();
+            pendingAvatarNumber = null;
+        }
     }
 
     private List<UiRow> buildPeople() {
@@ -1275,10 +1536,10 @@ public class MainActivity extends AppCompatActivity {
         }
         for (OutboxStore.Sent s : OutboxStore.get(this).getAll()) {
             if (!cleanNum(s.to).equals(key)) continue;
-            String status = s.ok ? "sent" : (s.status == null || s.status.isEmpty() ? "queued" : s.status);
+            // Delivery state is rendered as an icon row inside the bubble.
             merged.add(new Object[]{s.ts, new UiRow(R.drawable.ic_send,
-                    (s.ok ? getThemeColor(R.attr.colorPrimary) : getThemeColor(R.attr.colorError)),
-                    "You", s.body + "\n  \u2022 " + status, fmt.format(new Date(s.ts)), null, s)});
+                    getThemeColor(R.attr.colorPrimary),
+                    "You", s.body, fmt.format(new Date(s.ts)), null, s)});
         }
         return sortedRowsAsc(merged);
     }
@@ -1365,13 +1626,29 @@ public class MainActivity extends AppCompatActivity {
         smsBody.setText("");
     }
 
+    /** Updates the open-thread header only (title, nickname, avatar). */
+    private void refreshThreadHeader() {
+        if (openThreadNumber == null || threadTitle == null || threadSub == null) return;
+        String name = contactNameFor(openThreadNumber);
+        String nick = Prefs.get(this).getNickname(cleanNum(openThreadNumber));
+        threadTitle.setText(name.isEmpty() ? openThreadNumber : name);
+        threadSub.setText(!nick.isEmpty()
+                ? (name + "  (" + openThreadNumber + ")") : openThreadNumber);
+        if (threadAvatar != null) {
+            android.graphics.Bitmap ab = AvatarStore.load(this, openThreadNumber);
+            if (ab != null) {
+                threadAvatar.setImageBitmap(ab);
+                threadAvatar.setVisibility(View.VISIBLE);
+            } else {
+                threadAvatar.setVisibility(View.GONE);
+            }
+        }
+    }
+
     private void openThread(String number) {
         if (number == null || number.isEmpty()) return;
         openThreadNumber = number;
-        String name = contactNameFor(number);
-        String nick = Prefs.get(this).getNickname(cleanNum(number));
-        threadTitle.setText(name.isEmpty() ? number : name);
-        threadSub.setText(!nick.isEmpty() ? (name + "  (" + number + ")") : number);
+        refreshThreadHeader();
         smsToNumber.setEnabled(false);
         smsToNumber.setAlpha(0.7f);
         smsToNumber.setText(number);
@@ -1470,9 +1747,9 @@ public class MainActivity extends AppCompatActivity {
         int h=Math.abs(key.hashCode());
         int c = palette[h % palette.length];
         if (Prefs.get(this).isMono()) {
+            // Dark circles so the white initials stay readable on black.
             int gray = (int)(0.299 * ((c >> 16) & 0xFF) + 0.587 * ((c >> 8) & 0xFF) + 0.114 * (c & 0xFF));
-            if (gray < 70) gray = 70;
-            if (gray > 200) gray = 200;
+            gray = 42 + (gray * 54 / 255);
             return 0xFF000000 | (gray << 16) | (gray << 8) | gray;
         }
         return c;
@@ -1608,12 +1885,46 @@ public class MainActivity extends AppCompatActivity {
                 if(row.snt!=null){ bt.setText(row.snt.body); tm.setText(row.time); }
                 else if(row.rcv!=null){ bt.setText(row.rcv.body); tm.setText(row.time); }
                 else { bt.setText(row.title); tm.setText(row.time); }
+                if(type==1) act.bindSentStatus(v, row.snt);
                 return v;
             }
             // normal row with avatar
             ImageView icon = v.findViewById(R.id.rowIcon);
             TextView avatarText=v.findViewById(R.id.avatarText);
             View avatarWrap=v.findViewById(R.id.avatarWrap);
+            ImageView avatarImg = v.findViewById(R.id.avatarImg);
+            boolean canAvatar = row.kind == KIND_NORMAL
+                    && row.number != null && !row.number.isEmpty();
+            android.graphics.Bitmap ab = canAvatar ? AvatarStore.load(act, row.number) : null;
+            if (avatarImg != null) {
+                if (ab != null) {
+                    avatarImg.setImageBitmap(ab);
+                    avatarImg.setVisibility(View.VISIBLE);
+                    if (avatarWrap != null) avatarWrap.setBackground(null);
+                    if (avatarText != null) avatarText.setVisibility(View.GONE);
+                } else {
+                    avatarImg.setVisibility(View.GONE);
+                    if (avatarWrap != null) {
+                        avatarWrap.setBackgroundResource(R.drawable.m3_avatar);
+                    }
+                    if (avatarText != null) avatarText.setVisibility(View.VISIBLE);
+                }
+            }
+            if (avatarWrap != null) {
+                avatarWrap.setOnClickListener(null);
+                avatarWrap.setClickable(false);
+                // NB: never focusable — a focusable child disables ListView row taps.
+                avatarWrap.setFocusable(false);
+                if (canAvatar) {
+                    avatarWrap.setClickable(true);
+                    avatarWrap.setOnClickListener(new View.OnClickListener() {
+                        @Override public void onClick(View ev) {
+                            act.tap(ev);
+                            act.showContactEditor(row.number);
+                        }
+                    });
+                }
+            }
             if(avatarText!=null){
                 String initials=act.initialsFor(row.title);
                 avatarText.setText(initials);
@@ -1642,7 +1953,7 @@ public class MainActivity extends AppCompatActivity {
                     edit.setOnClickListener(new View.OnClickListener() {
                         @Override public void onClick(View ev) {
                             act.tap(ev);
-                            act.editNickname(row.number);
+                            act.showContactEditor(row.number);
                         }
                     });
                 } else {

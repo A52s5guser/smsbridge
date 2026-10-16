@@ -17,6 +17,13 @@ import java.util.List;
 public final class OutboxStore {
     private static final String FILE = "outbox.json";
 
+    /** Timer icon: queued / in flight, sender device hasn't confirmed receipt yet. */
+    public static final String STATUS_SENDING = "sending";
+    /** Check mark: sender device confirmed receipt (BT ack) or carrier accepted it. */
+    public static final String STATUS_DELIVERED = "delivered";
+    /** Retry (red): failed — no ack within timeout, or the send was rejected. */
+    public static final String STATUS_FAILED = "failed";
+
     private final List<Sent> items = new ArrayList<>();
     private final File file;
     private static OutboxStore s;
@@ -76,18 +83,60 @@ public final class OutboxStore {
     }
 
     public synchronized void addStatus(String to, String body, long ts, boolean ok, String err, String msgId) {
-        // Replace the queued entry instead of doubling it. Match by msgId,
-        // falling back to same recipient and body for older entries.
-        for (int i = items.size() - 1; i >= 0; i--) {
-            Sent s = items.get(i);
-            if (s.ok) continue;
-            if (!msgId.isEmpty() && !s.msgId.isEmpty()) {
+        // Replace the queued entry instead of doubling it. Match by msgId
+        // (regardless of current state, so a late failure can override an
+        // earlier delivered mark), falling back to same recipient and body
+        // for older entries.
+        if (!msgId.isEmpty()) {
+            for (int i = items.size() - 1; i >= 0; i--) {
+                Sent s = items.get(i);
                 if (msgId.equals(s.msgId)) items.remove(i);
-            } else if (s.to.equals(to) && s.body.equals(body)) {
-                items.remove(i);
+            }
+        } else {
+            for (int i = items.size() - 1; i >= 0; i--) {
+                Sent s = items.get(i);
+                if (s.ok) continue;
+                if (s.to.equals(to) && s.body.equals(body)) items.remove(i);
             }
         }
-        items.add(new Sent(to, body, ts, ok, err, ok ? "sent" : ("failed: " + err), msgId));
+        items.add(new Sent(to, body, ts, ok, err, ok ? STATUS_DELIVERED : STATUS_FAILED, msgId));
+        persist();
+    }
+
+    public synchronized Sent findByMsgId(String msgId) {
+        if (msgId == null || msgId.isEmpty()) return null;
+        for (int i = items.size() - 1; i >= 0; i--) {
+            Sent s = items.get(i);
+            if (msgId.equals(s.msgId)) return s;
+        }
+        return null;
+    }
+
+    /** Sender device confirmed receipt (BT ack): show the delivered check. */
+    public synchronized void markDelivered(String msgId) {
+        Sent s = findByMsgId(msgId);
+        if (s == null || s.ok) return;
+        items.remove(s);
+        items.add(new Sent(s.to, s.body, s.ts, true, "", STATUS_DELIVERED, s.msgId));
+        persist();
+    }
+
+    /** No ack within timeout, or the send was rejected: show retry. */
+    public synchronized void markFailed(String msgId, String err) {
+        Sent s = findByMsgId(msgId);
+        if (s == null || STATUS_FAILED.equals(s.status)) return;
+        items.remove(s);
+        items.add(new Sent(s.to, s.body, s.ts, false,
+                err == null ? "" : err, STATUS_FAILED, s.msgId));
+        persist();
+    }
+
+    /** Retry preparation: flip a failed entry back to sending. */
+    public synchronized void resetToSending(String msgId) {
+        Sent s = findByMsgId(msgId);
+        if (s == null) return;
+        items.remove(s);
+        items.add(new Sent(s.to, s.body, s.ts, false, "", STATUS_SENDING, s.msgId));
         persist();
     }
 

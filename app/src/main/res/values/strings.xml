@@ -24,6 +24,11 @@
     <string name="always_on_hint">Start on boot and keep running in the background</string>
     <string name="nick_hint">Nickname</string>
     <string name="nick_msg">Give this number a nickname. Leave empty to show the number.</string>
+    <string name="avatar_change">Change picture</string>
+    <string name="avatar_remove">Remove picture</string>
+    <string name="avatar_pick_title">Profile picture</string>
+    <string name="avatar_picture">Picture…</string>
+    <string name="avatar_fail">Couldn\'t use that image</string>
     <string name="list_sender">Forwarding log</string>
     <string name="list_receiver">Received messages</string>
     <string name="tab_chats">Chats</string>
@@ -70,4 +75,9 @@
     <string name="toast_no_to">Enter the recipient number</string>
     <string name="toast_no_body">Enter a message first</string>
     <string name="msg_deleted">Message deleted</string>
+    <string name="msg_sending">Sending…</string>
+    <string name="msg_delivered">Delivered</string>
+    <string name="msg_failed">Not delivered</string>
+    <string name="msg_retry">Retry</string>
+    <string name="msg_no_ack">No acknowledgement from sender</string>
 </resources>
